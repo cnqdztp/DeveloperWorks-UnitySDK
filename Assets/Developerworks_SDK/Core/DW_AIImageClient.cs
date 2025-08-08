@@ -1,0 +1,304 @@
+using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using Developerworks_SDK.Provider;
+using Developerworks_SDK.Provider.AI;
+
+namespace Developerworks_SDK
+{
+    /// <summary>
+    /// Client for AI image generation using platform-hosted models
+    /// Provides simple interface for generating images from text prompts
+    /// </summary>
+    public class DW_AIImageClient
+    {
+        private readonly string _modelName;
+        private readonly IImageProvider _imageProvider;
+
+        internal DW_AIImageClient(string modelName, IImageProvider imageProvider)
+        {
+            _modelName = modelName;
+            _imageProvider = imageProvider;
+        }
+
+        /// <summary>
+        /// Generate a single image from a text prompt
+        /// </summary>
+        /// <param name="prompt">Text description of the desired image</param>
+        /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
+        /// <param name="seed">Optional seed for reproducible results</param>
+        /// <returns>Generated image as base64 string, or null if generation failed</returns>
+        public async UniTask<string> GenerateImageAsync(
+            string prompt, 
+            string size = "1024x1024", 
+            int? seed = null)
+        {
+            var result = await GenerateImagesAsync(prompt, 1, size, null, seed);
+            return result?.Count > 0 ? result[0].ImageBase64 : null;
+        }
+
+        /// <summary>
+        /// Generate multiple images from a text prompt
+        /// </summary>
+        /// <param name="prompt">Text description of the desired images</param>
+        /// <param name="count">Number of images to generate (1-10)</param>
+        /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
+        /// <param name="aspectRatio">Aspect ratio (e.g., "16:9", "1:1", "9:16") - alternative to size</param>
+        /// <param name="seed">Optional seed for reproducible results</param>
+        /// <returns>List of generated images with metadata</returns>
+        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(
+            string prompt, 
+            int count = 1, 
+            string size = "1024x1024", 
+            string aspectRatio = null,
+            int? seed = null)
+        {
+            if (string.IsNullOrEmpty(prompt))
+            {
+                Debug.LogError("[DW_AIImageClient] Prompt cannot be empty");
+                return null;
+            }
+
+            if (count < 1 || count > 10)
+            {
+                Debug.LogError("[DW_AIImageClient] Count must be between 1 and 10");
+                return null;
+            }
+
+            var request = new ImageGenerationRequest
+            {
+                Model = _modelName,
+                Prompt = prompt,
+                N = count,
+                Size = size,
+                AspectRatio = aspectRatio,
+                Seed = seed
+            };
+
+            try
+            {
+                var response = await _imageProvider.GenerateImageAsync(request);
+                
+                if (response?.Data == null)
+                {
+                    Debug.LogError("[DW_AIImageClient] Image generation failed - no response data");
+                    return null;
+                }
+
+                var results = new List<GeneratedImage>();
+                foreach (var imageData in response.Data)
+                {
+                    results.Add(new GeneratedImage
+                    {
+                        ImageBase64 = imageData.B64Json,
+                        RevisedPrompt = imageData.RevisedPrompt,
+                        OriginalPrompt = prompt,
+                        GeneratedAt = DateTimeOffset.FromUnixTimeSeconds(response.Created).DateTime
+                    });
+                }
+
+                Debug.Log($"[DW_AIImageClient] Successfully generated {results.Count} images");
+                return results;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[DW_AIImageClient] Image generation failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Generate images with advanced provider-specific options
+        /// </summary>
+        /// <param name="prompt">Text description of the desired images</param>
+        /// <param name="options">Advanced generation options</param>
+        /// <returns>List of generated images with metadata</returns>
+        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(string prompt, ImageGenerationOptions options)
+        {
+            if (options == null)
+            {
+                return await GenerateImagesAsync(prompt);
+            }
+
+            var request = new ImageGenerationRequest
+            {
+                Model = _modelName,
+                Prompt = prompt,
+                N = options.Count,
+                Size = options.Size,
+                AspectRatio = options.AspectRatio,
+                Seed = options.Seed,
+                ProviderOptions = options.ProviderOptions
+            };
+
+            try
+            {
+                var response = await _imageProvider.GenerateImageAsync(request);
+                
+                if (response?.Data == null)
+                {
+                    Debug.LogError("[DW_AIImageClient] Image generation failed - no response data");
+                    return null;
+                }
+
+                var results = new List<GeneratedImage>();
+                foreach (var imageData in response.Data)
+                {
+                    results.Add(new GeneratedImage
+                    {
+                        ImageBase64 = imageData.B64Json,
+                        RevisedPrompt = imageData.RevisedPrompt,
+                        OriginalPrompt = prompt,
+                        GeneratedAt = DateTimeOffset.FromUnixTimeSeconds(response.Created).DateTime
+                    });
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[DW_AIImageClient] Image generation failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Convert base64 image data to Unity Texture2D
+        /// </summary>
+        /// <param name="base64Data">Base64 encoded image data</param>
+        /// <returns>Unity Texture2D, or null if conversion failed</returns>
+        public static Texture2D Base64ToTexture2D(string base64Data)
+        {
+            if (string.IsNullOrEmpty(base64Data))
+            {
+                Debug.LogError("[DW_AIImageClient] Base64 data is null or empty");
+                return null;
+            }
+
+            try
+            {
+                byte[] imageData = Convert.FromBase64String(base64Data);
+                Texture2D texture = new Texture2D(2, 2);
+                
+                if (texture.LoadImage(imageData))
+                {
+                    return texture;
+                }
+                else
+                {
+                    Debug.LogError("[DW_AIImageClient] Failed to load image data into texture");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[DW_AIImageClient] Failed to convert base64 to texture: {ex.Message}");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Convert a Unity Texture2D to a Sprite.
+        /// </summary>
+        /// <param name="texture">The Texture2D to convert.</param>
+        /// <returns>A Unity Sprite, or null if conversion failed.</returns>
+        public static Sprite Texture2DToSprite(Texture2D texture)
+        {
+            if (texture == null)
+            {
+                Debug.LogError("[DW_AIImageClient] Input Texture2D is null.");
+                return null;
+            }
+    
+            try
+            {
+                Rect rect = new Rect(0, 0, texture.width, texture.height);
+                Vector2 pivot = new Vector2(0.5f, 0.5f); // Center pivot
+                return Sprite.Create(texture, rect, pivot);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[DW_AIImageClient] Failed to convert Texture2D to Sprite: {ex.Message}");
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Represents a generated image with metadata
+    /// </summary>
+    [System.Serializable]
+    public class GeneratedImage
+    {
+        /// <summary>
+        /// Base64 encoded image data
+        /// </summary>
+        public string ImageBase64 { get; set; }
+
+        /// <summary>
+        /// The original prompt used for generation
+        /// </summary>
+        public string OriginalPrompt { get; set; }
+
+        /// <summary>
+        /// The revised prompt (if modified by the AI provider)
+        /// </summary>
+        public string RevisedPrompt { get; set; }
+
+        /// <summary>
+        /// When the image was generated
+        /// </summary>
+        public DateTime GeneratedAt { get; set; }
+
+        /// <summary>
+        /// Convert to Unity Texture2D
+        /// </summary>
+        public Texture2D ToTexture2D()
+        {
+            return DW_AIImageClient.Base64ToTexture2D(ImageBase64);
+        }
+        
+        /// <summary>
+        /// Converts the image data to a Unity Sprite.
+        /// </summary>
+        /// <returns>A Sprite representation of the image.</returns>
+        public Sprite ToSprite()
+        {
+            Texture2D texture = ToTexture2D();
+            return DW_AIImageClient.Texture2DToSprite(texture);
+        }
+    }
+
+    /// <summary>
+    /// Advanced options for image generation
+    /// </summary>
+    [System.Serializable]
+    public class ImageGenerationOptions
+    {
+        /// <summary>
+        /// Number of images to generate (1-10)
+        /// </summary>
+        public int Count { get; set; } = 1;
+
+        /// <summary>
+        /// Image size (e.g., "1024x1024", "1792x1024", "1024x1792")
+        /// </summary>
+        public string Size { get; set; } = "1024x1024";
+
+        /// <summary>
+        /// Aspect ratio (e.g., "16:9", "1:1", "9:16") - alternative to Size
+        /// </summary>
+        public string AspectRatio { get; set; }
+
+        /// <summary>
+        /// Seed for reproducible results
+        /// </summary>
+        public int? Seed { get; set; }
+
+        /// <summary>
+        /// Provider-specific options (e.g., for OpenAI: {"openai": {"style": "vivid", "quality": "hd"}})
+        /// </summary>
+        public Dictionary<string, object> ProviderOptions { get; set; }
+    }
+}
