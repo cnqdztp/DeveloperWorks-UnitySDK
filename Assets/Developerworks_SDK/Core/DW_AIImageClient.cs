@@ -28,14 +28,31 @@ namespace Developerworks_SDK
         /// <param name="prompt">Text description of the desired image</param>
         /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
         /// <param name="seed">Optional seed for reproducible results</param>
-        /// <returns>Generated image as base64 string, or null if generation failed</returns>
-        public async UniTask<string> GenerateImageAsync(
+        /// <returns>Generated image with metadata, or null if generation failed</returns>
+        public async UniTask<GeneratedImage> GenerateImageAsync(
             string prompt, 
             string size = "1024x1024", 
             int? seed = null)
         {
-            var result = await GenerateImagesAsync(prompt, 1, size, null, seed);
-            return result?.Count > 0 ? result[0].ImageBase64 : null;
+            var results = await GenerateImagesAsync(prompt, 1, size, null, seed);
+            return results?.Count > 0 ? results[0] : null;
+        }
+
+        /// <summary>
+        /// Generate a single image from a text prompt and return only the base64 string
+        /// </summary>
+        /// <param name="prompt">Text description of the desired image</param>
+        /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
+        /// <param name="seed">Optional seed for reproducible results</param>
+        /// <returns>Generated image as base64 string, or null if generation failed</returns>
+        [System.Obsolete("Use GenerateImageAsync() which returns GeneratedImage with metadata. This method is kept for backward compatibility.")]
+        public async UniTask<string> GenerateImageBase64Async(
+            string prompt, 
+            string size = "1024x1024", 
+            int? seed = null)
+        {
+            var result = await GenerateImageAsync(prompt, size, seed);
+            return result?.ImageBase64;
         }
 
         /// <summary>

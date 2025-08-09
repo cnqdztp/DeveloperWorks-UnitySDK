@@ -19,6 +19,7 @@ namespace Developerworks_SDK
         private static Auth.DW_AuthManager _dwAuthManager => Instance.authManager;
         private static Provider.IChatProvider _chatProvider;
         private static Provider.IImageProvider _imageProvider;
+        private static Provider.AI.IObjectProvider _objectProvider;
 
         /// <summary>
         /// Asynchronously initializes the SDK. This must complete successfully before creating clients.
@@ -58,6 +59,7 @@ namespace Developerworks_SDK
 
             _chatProvider = new Provider.AI.AIChatProvider(_dwAuthManager);
             _imageProvider = new Provider.AI.AIImageProvider(_dwAuthManager);
+            _objectProvider = new Provider.AI.AIObjectProvider(_dwAuthManager);
             _isInitialized = true;
             Debug.Log("[Developerworks SDK] Developerworks_SDK Initialized Successfully");
             return true;
@@ -91,7 +93,7 @@ namespace Developerworks_SDK
         public static class Factory
         {
             /// <summary>
-            /// Creates a standard chat client for direct API control
+            /// Creates a standard chat client with both text and structured output capabilities
             /// </summary>
             public static DW_AIChatClient CreateChatClient(string modelName = null)
             {
@@ -107,7 +109,7 @@ namespace Developerworks_SDK
                 
                 string model = modelName ?? Instance.defaultChatModel;
                 var chatService = new Services.ChatService(_chatProvider);
-                return new DW_AIChatClient(model, chatService);
+                return new DW_AIChatClient(model, chatService, _objectProvider);
             }
 
             /// <summary>
@@ -136,7 +138,6 @@ namespace Developerworks_SDK
                 return new DW_AIImageClient(model, _imageProvider);
             }
 
-           
         }
 
         public static class Populate

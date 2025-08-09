@@ -38,7 +38,7 @@ public class ExampleGameManager : MonoBehaviour
     {
         var imageGen = DW_SDK.Factory.CreateImageClient();
         var genResult = await imageGen.GenerateImageAsync("a futuristic city");
-        _image.sprite = DW_AIImageClient.Texture2DToSprite( DW_AIImageClient.Base64ToTexture2D(genResult));
+        _image.sprite =  genResult.ToSprite();
     }
     async UniTask StandardChat()
     {
@@ -126,6 +126,11 @@ public class ExampleGameManager : MonoBehaviour
         var chat = _npcClient;
         await chat.TalkStream("东京怎么玩？",(s)=>_text.text=s,(s)=>{_text.text=s;});
 
+    }
+
+    async void StructuredChat()
+    {
+        // var chat = 
     }
 
 }

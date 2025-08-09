@@ -14,7 +14,6 @@ namespace Developerworks_SDK
     public class DW_NPCClient : MonoBehaviour
     {
         [SerializeField] private string characterDesign;
-        [SerializeField] private string chatModelName;
         private DW_AIChatClient _chatClient;
         private List<ChatMessage> _conversationHistory;
         private string _currentPrompt;
@@ -27,6 +26,8 @@ namespace Developerworks_SDK
         {
             _chatClient = chatClient;
             _isReady = true;
+            
+            Debug.Log($"[NPCClient] Using model '{chatClient.ModelName}' for both chat and structured responses");
         }
         
         private void Start()
@@ -40,7 +41,7 @@ namespace Developerworks_SDK
             await UniTask.WaitUntil(() => DW_SDK.IsReady());
             if(string.IsNullOrEmpty(characterDesign))
                 SetSystemPrompt(characterDesign);
-            DW_SDK.Populate.CreateNpc(this,chatModelName);
+            DW_SDK.Populate.CreateNpc(this);
         }
 
         /// <summary>
@@ -101,6 +102,225 @@ namespace Developerworks_SDK
                 return null;
             }
 
+        }
+
+        /// <summary>
+        /// Send a message to the NPC and get a structured response using a schema name.
+        /// Returns a JObject for maximum flexibility - you can access fields dynamically or deserialize to a specific type.
+        /// The conversation history is automatically managed.
+        /// </summary>
+        /// <param name="message">The message to send to the NPC</param>
+        /// <param name="schemaName">Name of the schema to use</param>
+        /// <returns>The structured response as JObject, or null if failed</returns>
+        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructured(string message, string schemaName)
+        {
+            _isTalking = true;
+            await UniTask.WaitUntil(() => IsReady);
+            
+            if (!gameObject.activeInHierarchy)
+            {
+                Debug.LogError("NPC client is not active");
+                _isTalking = false;
+                return null;
+            }
+            
+            if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(schemaName))
+            {
+                _isTalking = false;
+                return null;
+            }
+
+            if (_chatClient == null)
+            {
+                Debug.LogError("Chat client not initialized. Make sure SDK is properly set up.");
+                _isTalking = false;
+                return null;
+            }
+
+            // Build the conversation context from history
+            string conversationContext = BuildConversationContext();
+            string fullPrompt = string.IsNullOrEmpty(conversationContext) ? message : $"{conversationContext}\n\nUser: {message}";
+
+            try
+            {
+                // Use ChatClient's structured output capability
+                var result = await _chatClient.GenerateStructuredAsync(schemaName, fullPrompt, _currentPrompt);
+
+                if (result != null)
+                {
+                    // Add user message to history
+                    _conversationHistory.Add(new ChatMessage
+                    {
+                        Role = "user",
+                        Content = message
+                    });
+
+                    // Smart handling: Look for .talk field in structured response
+                    string responseContent = ExtractTalkFromStructuredResponse(result, schemaName);
+                    
+                    // Add assistant response to history
+                    _conversationHistory.Add(new ChatMessage
+                    {
+                        Role = "assistant",
+                        Content = responseContent
+                    });
+
+                    _isTalking = false;
+                    return result;
+                }
+                else
+                {
+                    _isTalking = false;
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _isTalking = false;
+                UnityEngine.Debug.LogError($"[NPCClient] Error in TalkStructured: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Send a message to the NPC and get a structured response, then deserialize to a specific type.
+        /// The conversation history is automatically managed.
+        /// </summary>
+        /// <typeparam name="T">The type to deserialize the structured response to</typeparam>
+        /// <param name="message">The message to send to the NPC</param>
+        /// <param name="schemaName">The name of the schema to use</param>
+        /// <returns>The structured response deserialized to type T</returns>
+        public async UniTask<T> TalkStructured<T>(string message, string schemaName)
+        {
+            _isTalking = true;
+            await UniTask.WaitUntil(() => IsReady);
+            
+            if (!gameObject.activeInHierarchy)
+            {
+                Debug.LogError("NPC client is not active");
+                _isTalking = false;
+                return default;
+            }
+            
+            if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(schemaName))
+            {
+                _isTalking = false;
+                return default;
+            }
+
+            if (_chatClient == null)
+            {
+                Debug.LogError("Chat client not initialized. Make sure SDK is properly set up.");
+                _isTalking = false;
+                return default;
+            }
+
+            // Build the conversation context from history
+            string conversationContext = BuildConversationContext();
+            string fullPrompt = string.IsNullOrEmpty(conversationContext) ? message : $"{conversationContext}\n\nUser: {message}";
+
+            try
+            {
+                // Use ChatClient's structured output capability with generic type
+                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, fullPrompt, _currentPrompt);
+
+                // Add user message to history
+                _conversationHistory.Add(new ChatMessage
+                {
+                    Role = "user",
+                    Content = message
+                });
+
+                // Smart handling: Look for .talk field in structured response
+                var jobject = Newtonsoft.Json.Linq.JObject.FromObject(result);
+                string responseContent = ExtractTalkFromStructuredResponse(jobject, schemaName);
+                
+                // Add assistant response to history
+                _conversationHistory.Add(new ChatMessage
+                {
+                    Role = "assistant",
+                    Content = responseContent
+                });
+
+                _isTalking = false;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _isTalking = false;
+                UnityEngine.Debug.LogError($"[NPCClient] Error in TalkStructured<T>: {ex.Message}");
+                return default;
+            }
+        }
+
+
+        /// <summary>
+        /// Build conversation context from history for structured generation
+        /// </summary>
+        private string BuildConversationContext()
+        {
+            if (_conversationHistory.Count == 0) return string.Empty;
+
+            var contextBuilder = new System.Text.StringBuilder();
+            
+            // Skip system messages when building context for structured generation
+            foreach (var message in _conversationHistory)
+            {
+                if (message.Role == "system") continue;
+                
+                string role = message.Role == "user" ? "User" : "Assistant";
+                contextBuilder.AppendLine($"{role}: {message.Content}");
+            }
+
+            return contextBuilder.ToString().Trim();
+        }
+
+        /// <summary>
+        /// Smart extraction of talk content from structured response.
+        /// Looks for [Tt]alk or [Dd]ialogue fields (case-insensitive) and uses them as the conversation content.
+        /// Falls back to raw JSON if no talk field is found.
+        /// </summary>
+        /// <param name="structuredResponse">The structured response JObject</param>
+        /// <param name="schemaName">The schema name for logging</param>
+        /// <returns>The content to add to conversation history</returns>
+        private string ExtractTalkFromStructuredResponse(Newtonsoft.Json.Linq.JObject structuredResponse, string schemaName)
+        {
+            if (structuredResponse == null)
+            {
+                return $"[Structured Response: {schemaName}]";
+            }
+
+            // Priority fields: [Tt]alk or [Dd]ialogue (case-insensitive)
+            string[] priorityFields = { "talk", "Talk", "dialogue", "Dialogue" };
+            
+            // Check priority fields first
+            foreach (string field in priorityFields)
+            {
+                var talkToken = structuredResponse[field];
+                if (talkToken != null && !string.IsNullOrWhiteSpace(talkToken.ToString()))
+                {
+                    string talkContent = talkToken.ToString();
+                    Debug.Log($"[NPCClient] Using '{field}' field from structured response as conversation content");
+                    return talkContent;
+                }
+            }
+            
+            // Fallback: check other common dialogue fields
+            string[] fallbackFields = { "response", "message", "content", "text", "speech", "say" };
+            foreach (string field in fallbackFields)
+            {
+                var talkToken = structuredResponse[field];
+                if (talkToken != null && !string.IsNullOrWhiteSpace(talkToken.ToString()))
+                {
+                    string talkContent = talkToken.ToString();
+                    Debug.Log($"[NPCClient] Using fallback '{field}' field from structured response as conversation content");
+                    return talkContent;
+                }
+            }
+            
+            // No talk field found, use the raw structured response
+            Debug.Log($"[NPCClient] No talk/dialogue field found in structured response, using raw JSON");
+            return $"[Structured Response: {structuredResponse.ToString(Newtonsoft.Json.Formatting.None)}]";
         }
 
         /// <summary>
@@ -311,6 +531,203 @@ namespace Developerworks_SDK
         public int GetHistoryLength()
         {
             return _conversationHistory.Count;
+        }
+
+        /// <summary>
+        /// Manually append a chat message to the conversation history
+        /// </summary>
+        /// <param name="role">The role of the message (system, user, assistant)</param>
+        /// <param name="content">The content of the message</param>
+        public void AppendChatMessage(string role, string content)
+        {
+            if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
+            {
+                Debug.LogWarning("[NPCClient] Role and content cannot be empty when appending chat message");
+                return;
+            }
+
+            _conversationHistory.Add(new ChatMessage
+            {
+                Role = role,
+                Content = content
+            });
+        }
+
+        /// <summary>
+        /// Revert (remove) the last N chat messages from history
+        /// </summary>
+        /// <param name="count">Number of messages to remove from the end</param>
+        /// <returns>Number of messages actually removed</returns>
+        public int RevertChatMessages(int count)
+        {
+            if (count <= 0)
+            {
+                return 0;
+            }
+
+            int messagesToRemove = Mathf.Min(count, _conversationHistory.Count);
+            int originalCount = _conversationHistory.Count;
+
+            // Remove from the end
+            for (int i = 0; i < messagesToRemove; i++)
+            {
+                _conversationHistory.RemoveAt(_conversationHistory.Count - 1);
+            }
+
+            int actuallyRemoved = originalCount - _conversationHistory.Count;
+            Debug.Log($"[NPCClient] Reverted {actuallyRemoved} messages from history. Remaining: {_conversationHistory.Count}");
+            
+            return actuallyRemoved;
+        }
+
+        /// <summary>
+        /// Print the current conversation history in a pretty format for debugging
+        /// </summary>
+        /// <param name="title">Optional title for the chat log</param>
+        public void PrintPrettyChatMessages(string title = null)
+        {
+            string displayTitle = title ?? $"NPC '{gameObject.name}' Conversation History";
+            DW_AIChatClient.PrintPrettyChatMessages(_conversationHistory, displayTitle);
+        }
+
+        /// <summary>
+        /// Send a message to the NPC and get a structured response using the full conversation history as messages.
+        /// This method automatically uses the maintained conversation history with messages format.
+        /// </summary>
+        /// <param name="message">The message to send to the NPC</param>
+        /// <param name="schemaName">Name of the schema to use</param>
+        /// <returns>The structured response as JObject, or null if failed</returns>
+        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructuredWithHistory(string message, string schemaName)
+        {
+            _isTalking = true;
+            await UniTask.WaitUntil(() => IsReady);
+            
+            if (!gameObject.activeInHierarchy)
+            {
+                Debug.LogError("NPC client is not active");
+                _isTalking = false;
+                return null;
+            }
+            
+            if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(schemaName))
+            {
+                _isTalking = false;
+                return null;
+            }
+
+            if (_chatClient == null)
+            {
+                Debug.LogError("Chat client not initialized. Make sure SDK is properly set up.");
+                _isTalking = false;
+                return null;
+            }
+
+            // Add user message to history first
+            _conversationHistory.Add(new ChatMessage
+            {
+                Role = "user",
+                Content = message
+            });
+
+            try
+            {
+                // Use ChatClient's structured output with full message history
+                var result = await _chatClient.GenerateStructuredAsync(schemaName, _conversationHistory);
+
+                if (result != null)
+                {
+                    // Smart handling: Look for .talk field in structured response
+                    string responseContent = ExtractTalkFromStructuredResponse(result, schemaName);
+                    
+                    // Add assistant response to history
+                    _conversationHistory.Add(new ChatMessage
+                    {
+                        Role = "assistant",
+                        Content = responseContent
+                    });
+
+                    _isTalking = false;
+                    return result;
+                }
+                else
+                {
+                    _isTalking = false;
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _isTalking = false;
+                UnityEngine.Debug.LogError($"[NPCClient] Error in TalkStructuredWithHistory: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Send a message to the NPC and get a structured response using the full conversation history, then deserialize to a specific type.
+        /// This method automatically uses the maintained conversation history with messages format.
+        /// </summary>
+        /// <typeparam name="T">The type to deserialize the structured response to</typeparam>
+        /// <param name="message">The message to send to the NPC</param>
+        /// <param name="schemaName">The name of the schema to use</param>
+        /// <returns>The structured response deserialized to type T</returns>
+        public async UniTask<T> TalkStructuredWithHistory<T>(string message, string schemaName)
+        {
+            _isTalking = true;
+            await UniTask.WaitUntil(() => IsReady);
+            
+            if (!gameObject.activeInHierarchy)
+            {
+                Debug.LogError("NPC client is not active");
+                _isTalking = false;
+                return default;
+            }
+            
+            if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(schemaName))
+            {
+                _isTalking = false;
+                return default;
+            }
+
+            if (_chatClient == null)
+            {
+                Debug.LogError("Chat client not initialized. Make sure SDK is properly set up.");
+                _isTalking = false;
+                return default;
+            }
+
+            // Add user message to history first
+            _conversationHistory.Add(new ChatMessage
+            {
+                Role = "user",
+                Content = message
+            });
+
+            try
+            {
+                // Use ChatClient's structured output with full message history and generic type
+                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, _conversationHistory);
+
+                // Smart handling: Look for .talk field in structured response  
+                var jobject = Newtonsoft.Json.Linq.JObject.FromObject(result);
+                string responseContent = ExtractTalkFromStructuredResponse(jobject, schemaName);
+                
+                // Add assistant response to history
+                _conversationHistory.Add(new ChatMessage
+                {
+                    Role = "assistant", 
+                    Content = responseContent
+                });
+
+                _isTalking = false;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _isTalking = false;
+                UnityEngine.Debug.LogError($"[NPCClient] Error in TalkStructuredWithHistory<T>: {ex.Message}");
+                return default;
+            }
         }
 
     }

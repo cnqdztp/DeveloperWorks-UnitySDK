@@ -722,7 +722,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameId: ef6eaf4b-39ae-4c76-bcf6-b07541cf0ccc
-  defaultChatModel: Yi-34B-Chat
+  defaultChatModel: Qwen3
   defaultImageModel: flux-1-schnell
   authManager: {fileID: 1486145430}
 --- !u!4 &1486145432
@@ -758,7 +758,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1858752643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -805,7 +805,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterDesign: 
-  chatModelName: 
 --- !u!114 &1858752646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -819,7 +818,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterDesign: "\u4E00\u4E2A\u5E7C\u513F\u56ED\u8001\u5E08"
-  chatModelName: 
 --- !u!1 &1996576798
 GameObject:
   m_ObjectHideFlags: 0
@@ -922,6 +920,66 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &2060715943
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2060715945}
+  - component: {fileID: 2060715944}
+  - component: {fileID: 2060715946}
+  m_Layer: 0
+  m_Name: Structured
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2060715944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060715943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0df5e715daee492d9a31f28587b35e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  customSchemaLibrary: {fileID: 0}
+  npcClient: {fileID: 2060715946}
+--- !u!4 &2060715945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060715943}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1071.6412, y: 526.5188, z: 8.978484}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2060715946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060715943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052301c9289b04e62bd7ead51e038a0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterDesign: "\u6765\u81EA\u6DF1\u6E0A\u4E16\u754C\u89C2\u91CC\uFF0C\u5C45\u4F4F\u5728\u5C9B\u4E0A\u7684\u5C9B\u6C11"
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -931,3 +989,4 @@ SceneRoots:
   - {fileID: 1102808831}
   - {fileID: 1858752644}
   - {fileID: 1486145432}
+  - {fileID: 2060715945}
