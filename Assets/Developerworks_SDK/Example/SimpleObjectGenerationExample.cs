@@ -26,7 +26,7 @@ namespace Developerworks_SDK.Example
 
         private async UniTask InitializeExample()
         {
-            await DW_SDK.InitializeAsync("dev-b41a6b70-7abc-4ecf-b316-374f4b48caed");
+            await DW_SDK.InitializeAsync();
             // Wait for SDK to be ready
             await UniTask.WaitUntil(() => DW_SDK.IsReady());
             
