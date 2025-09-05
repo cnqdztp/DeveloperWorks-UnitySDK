@@ -39,6 +39,7 @@ namespace Developerworks_SDK.Auth
                 return true;
             }
 
+            // Step 1: Try loading Player Token from PlayerPrefs
             LoadPlayerToken();
 
             if (IsTokenValid())
@@ -47,7 +48,19 @@ namespace Developerworks_SDK.Auth
                 return true;
             }
 
-            Debug.Log("[Developerworks SDK] No valid player token found. Initiating login process.");
+            // Step 2: Try loading Shared Token if Player Token not found
+            LoadSharedToken();
+            
+            if (IsTokenValid())
+            {
+                Debug.Log("[Developerworks SDK] Valid shared token found and loaded.");
+                // Also save it as Player Token for consistency
+                SavePlayerTokenFromShared();
+                return true;
+            }
+
+            // Step 3: No valid tokens found, initiate login process
+            Debug.Log("[Developerworks SDK] No valid player or shared token found. Initiating login process.");
             return await ShowLoginWebAsync();
         }
 
@@ -99,6 +112,32 @@ namespace Developerworks_SDK.Auth
             AuthToken = PlayerPrefs.GetString(PlayerTokenKey, null);
         }
 
+        private void LoadSharedToken()
+        {
+            // Do not overwrite a developer token or existing valid token.
+            if (IsDeveloperToken || !string.IsNullOrEmpty(AuthToken)) return;
+
+            string sharedToken = DW_LocalSharedToken.LoadToken();
+            if (!string.IsNullOrEmpty(sharedToken))
+            {
+                AuthToken = sharedToken;
+                Debug.Log("[Developerworks SDK] Loaded token from shared storage.");
+            }
+        }
+
+        private void SavePlayerTokenFromShared()
+        {
+            // Save the shared token as Player Token with a far future expiry
+            if (!string.IsNullOrEmpty(AuthToken))
+            {
+                PlayerPrefs.SetString(PlayerTokenKey, AuthToken);
+                // Set a far future expiry since we don't know the actual expiry
+                PlayerPrefs.SetString(TokenExpiryKey, DateTime.MaxValue.ToUniversalTime().Ticks.ToString());
+                PlayerPrefs.Save();
+                Debug.Log("[Developerworks SDK] Shared token saved as player token.");
+            }
+        }
+
         private bool IsTokenValid()
         {
             if (string.IsNullOrEmpty(AuthToken))
@@ -145,7 +184,11 @@ namespace Developerworks_SDK.Auth
             
             PlayerPrefs.SetString(TokenExpiryKey, expiryDate.ToUniversalTime().Ticks.ToString());
             PlayerPrefs.Save();
-            Debug.Log("[Developerworks SDK] New player token saved successfully.");
+            
+            // Also save to shared token storage
+            DW_LocalSharedToken.SaveToken(token);
+            
+            Debug.Log("[Developerworks SDK] New player token saved successfully (both local and shared).");
         }
         
         public static void ClearPlayerToken()
@@ -153,6 +196,9 @@ namespace Developerworks_SDK.Auth
             PlayerPrefs.DeleteKey(PlayerTokenKey);
             PlayerPrefs.DeleteKey(TokenExpiryKey);
             PlayerPrefs.Save();
+            
+            // Also clear the shared token
+            DW_LocalSharedToken.EraseToken();
         }
         
         /// <summary>

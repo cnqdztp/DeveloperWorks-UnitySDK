@@ -332,7 +332,9 @@ namespace Developerworks_SDK.Auth
                 string expiresAt = playerClient.LastExchangeResponse.ExpiresAt;
 
                 DW_AuthManager.SavePlayerToken(playerToken, expiresAt);
-                Debug.Log("[DW Auth] JWT exchanged for Player Token and saved successfully.");
+                // Also save to shared token storage for cross-app usage
+                DW_LocalSharedToken.SaveToken(playerToken);
+                Debug.Log("[DW Auth] JWT exchanged for Player Token and saved successfully (both local and shared).");
                 return true;
             }
             else
