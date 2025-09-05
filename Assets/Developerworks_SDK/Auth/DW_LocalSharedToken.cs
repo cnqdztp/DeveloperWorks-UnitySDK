@@ -8,10 +8,11 @@ public static class DW_LocalSharedToken
 {
     private const string TokenFileName = "shared_token.txt";
 
-    // !!! 建议每一套 Unity 应用使用独立的 Key + IV !!!
-    private static readonly byte[] AesKey = Encoding.UTF8.GetBytes("/wu4uTqdUBpCIhutfM50qQ=="); // 16字节
-    private static readonly byte[] AesIV  = Encoding.UTF8.GetBytes("pCkXFJR0Ahco+YKvkNRq2Q=="); // 16字节
+    // base64 转换成真正的 key/iv
+    private static readonly byte[] AesKey = Convert.FromBase64String("/wu4uTqdUBpCIhutfM50qQ=="); // 16字节
+    private static readonly byte[] AesIV  = Convert.FromBase64String("pCkXFJR0Ahco+YKvkNRq2Q=="); // 16字节
 
+#if !UNITY_WEBGL
     private static string GetSharedFilePath()
     {
         string folderPath = "";
@@ -21,13 +22,14 @@ public static class DW_LocalSharedToken
 #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Application Support");
 #else
-        folderPath=""
+        folderPath = Application.persistentDataPath;
 #endif
 
         if (string.IsNullOrEmpty(folderPath))
         {
             return null;
         }
+
         string fullPath = Path.Combine(folderPath, "MyUnitySharedData");
         if (!Directory.Exists(fullPath))
         {
@@ -36,23 +38,25 @@ public static class DW_LocalSharedToken
 
         return Path.Combine(fullPath, TokenFileName);
     }
+#endif
 
     public static void SaveToken(string token)
     {
         try
         {
             byte[] encrypted = EncryptStringToBytes_Aes(token, AesKey, AesIV);
-            var path = GetSharedFilePath();
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
 
-            if (!File.Exists(path))
-            {
-                File.Create(path).Close();
-            }
+#if UNITY_WEBGL
+            // WebGL：存到 localStorage
+            string encoded = Convert.ToBase64String(encrypted);
+            PlayerPrefs.SetString("shared_token", encoded);
+            PlayerPrefs.Save();
+#else
+            var path = GetSharedFilePath();
+            if (string.IsNullOrEmpty(path)) return;
+
             File.WriteAllBytes(path, encrypted);
+#endif
             Debug.Log("Token saved (encrypted).");
         }
         catch (Exception e)
@@ -65,11 +69,22 @@ public static class DW_LocalSharedToken
     {
         try
         {
-            string path = GetSharedFilePath();
-            if (string.IsNullOrEmpty(path))
+#if UNITY_WEBGL
+            if (PlayerPrefs.HasKey("shared_token"))
             {
+                string encoded = PlayerPrefs.GetString("shared_token");
+                byte[] encrypted = Convert.FromBase64String(encoded);
+                return DecryptStringFromBytes_Aes(encrypted, AesKey, AesIV);
+            }
+            else
+            {
+                Debug.LogWarning("Token not found in localStorage.");
                 return null;
             }
+#else
+            string path = GetSharedFilePath();
+            if (string.IsNullOrEmpty(path)) return null;
+
             if (File.Exists(path))
             {
                 byte[] encrypted = File.ReadAllBytes(path);
@@ -80,6 +95,7 @@ public static class DW_LocalSharedToken
                 Debug.LogWarning("Token file not found.");
                 return null;
             }
+#endif
         }
         catch (Exception e)
         {
@@ -92,12 +108,21 @@ public static class DW_LocalSharedToken
     {
         try
         {
+#if UNITY_WEBGL
+            if (PlayerPrefs.HasKey("shared_token"))
+            {
+                PlayerPrefs.DeleteKey("shared_token");
+                PlayerPrefs.Save();
+                Debug.Log("Token erased from localStorage.");
+            }
+#else
             string path = GetSharedFilePath();
             if (File.Exists(path))
             {
                 File.Delete(path);
                 Debug.Log("Token erased.");
             }
+#endif
         }
         catch (Exception e)
         {
@@ -115,7 +140,7 @@ public static class DW_LocalSharedToken
 
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
             using MemoryStream msEncrypt = new MemoryStream();
-            using CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
+            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
             using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
             {
                 swEncrypt.Write(plainText);
