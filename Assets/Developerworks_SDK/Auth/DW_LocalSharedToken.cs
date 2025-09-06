@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+#if !UNITY_WEBGL
 using System.Security.Cryptography;
+#endif
 using System.Text;
 using UnityEngine;
 
@@ -8,9 +10,11 @@ public static class DW_LocalSharedToken
 {
     private const string TokenFileName = "shared_token.txt";
 
-    // base64 转换成真正的 key/iv
+#if !UNITY_WEBGL
+    // base64 转换成真正的 key/iv (仅在非 WebGL 平台使用)
     private static readonly byte[] AesKey = Convert.FromBase64String("/wu4uTqdUBpCIhutfM50qQ=="); // 16字节
     private static readonly byte[] AesIV  = Convert.FromBase64String("pCkXFJR0Ahco+YKvkNRq2Q=="); // 16字节
+#endif
 
 #if !UNITY_WEBGL
     private static string GetSharedFilePath()
@@ -44,20 +48,20 @@ public static class DW_LocalSharedToken
     {
         try
         {
-            byte[] encrypted = EncryptStringToBytes_Aes(token, AesKey, AesIV);
-
 #if UNITY_WEBGL
-            // WebGL：存到 localStorage
-            string encoded = Convert.ToBase64String(encrypted);
-            PlayerPrefs.SetString("shared_token", encoded);
+            // WebGL：直接存储到 localStorage，不加密
+            PlayerPrefs.SetString("shared_token", token);
             PlayerPrefs.Save();
+            Debug.Log("Token saved (unencrypted for WebGL).");
 #else
+            // 其他平台：加密后存储
+            byte[] encrypted = EncryptStringToBytes_Aes(token, AesKey, AesIV);
             var path = GetSharedFilePath();
             if (string.IsNullOrEmpty(path)) return;
 
             File.WriteAllBytes(path, encrypted);
-#endif
             Debug.Log("Token saved (encrypted).");
+#endif
         }
         catch (Exception e)
         {
@@ -70,11 +74,11 @@ public static class DW_LocalSharedToken
         try
         {
 #if UNITY_WEBGL
+            // WebGL：直接从 localStorage 读取，不解密
             if (PlayerPrefs.HasKey("shared_token"))
             {
-                string encoded = PlayerPrefs.GetString("shared_token");
-                byte[] encrypted = Convert.FromBase64String(encoded);
-                return DecryptStringFromBytes_Aes(encrypted, AesKey, AesIV);
+                string token = PlayerPrefs.GetString("shared_token");
+                return token;
             }
             else
             {
@@ -82,6 +86,7 @@ public static class DW_LocalSharedToken
                 return null;
             }
 #else
+            // 其他平台：读取并解密
             string path = GetSharedFilePath();
             if (string.IsNullOrEmpty(path)) return null;
 
@@ -130,7 +135,8 @@ public static class DW_LocalSharedToken
         }
     }
 
-    // === AES 加密方法 ===
+#if !UNITY_WEBGL
+    // === AES 加密方法 (仅在非 WebGL 平台使用) ===
     private static byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] iv)
     {
         using (Aes aesAlg = Aes.Create())
@@ -163,4 +169,5 @@ public static class DW_LocalSharedToken
             return srDecrypt.ReadToEnd();
         }
     }
+#endif
 }

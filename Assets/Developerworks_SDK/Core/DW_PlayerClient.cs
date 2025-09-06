@@ -38,8 +38,8 @@ namespace Developerworks_SDK
         {
             [JsonProperty("userId")] public string UserId { get; set; }
             [JsonProperty("credits")] public float Credits { get; set; }
-            [JsonProperty("tokenType")] public string TokenType { get; set; }
-            [JsonProperty("tokenId")] public string TokenId { get; set; }
+            // [JsonProperty("tokenType")] public string TokenType { get; set; }
+            // [JsonProperty("tokenId")] public string TokenId { get; set; }
         }
 
         [Serializable]
