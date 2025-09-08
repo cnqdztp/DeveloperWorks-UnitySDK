@@ -73,16 +73,109 @@ namespace Developerworks_SDK.Provider.AI
                 { 
                     await webRequest.SendWebRequest().ToUniTask(cancellationToken: cancellationToken); 
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException)) 
+                catch (UnityWebRequestException ex) when (!(ex is OperationCanceledException)) 
                 { 
-                    Debug.LogError($"[AIImageProvider] API request failed: {ex.Message}"); 
-                    return null; 
+                    // Check if we have response data to parse
+                    if (webRequest.downloadHandler != null && !string.IsNullOrEmpty(webRequest.downloadHandler.text))
+                    {
+                        // Try to parse error response
+                        try
+                        {
+                            var errorResponse = JsonConvert.DeserializeObject<ApiErrorResponse>(webRequest.downloadHandler.text);
+                            if (errorResponse?.error != null)
+                            {
+                                // Check for specific image size validation errors
+                                if (errorResponse.error.code == ErrorCodes.INVALID_SIZE_FORMAT ||
+                                    errorResponse.error.code == ErrorCodes.INVALID_SIZE_VALUE ||
+                                    errorResponse.error.code == ErrorCodes.SIZE_EXCEEDS_LIMIT ||
+                                    errorResponse.error.code == ErrorCodes.SIZE_NOT_MULTIPLE ||
+                                    errorResponse.error.code == ErrorCodes.SIZE_NOT_ALLOWED)
+                                {
+                                    // Don't log here, let the caller handle it
+                                    throw new ImageSizeValidationException(
+                                        errorResponse.error.message,
+                                        errorResponse.error.code,
+                                        request.Size
+                                    );
+                                }
+                                
+                                // Throw general API error
+                                throw new ApiErrorException(
+                                    errorResponse.error.message,
+                                    errorResponse.error.code,
+                                    (int)webRequest.responseCode
+                                );
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                            // If error response parsing fails, log and throw generic error
+                            Debug.LogError($"[AIImageProvider] Failed to parse error response: {webRequest.downloadHandler.text}");
+                        }
+                    }
+                    
+                    // Only log for actual network/unknown errors
+                    Debug.LogError($"[AIImageProvider] API request failed: {ex.Message}");
+                    throw new DeveloperworksException($"Network request failed: {ex.Message}", ex);
+                }
+                catch (Exception ex) when (!(ex is OperationCanceledException) && !(ex is ImageSizeValidationException) && !(ex is ApiErrorException) && !(ex is DeveloperworksException))
+                {
+                    Debug.LogError($"[AIImageProvider] Unexpected error: {ex.Message}");
+                    throw new DeveloperworksException($"Unexpected error: {ex.Message}", ex);
                 }
                 
                 if (webRequest.result != UnityWebRequest.Result.Success) 
                 { 
-                    Debug.LogError($"[AIImageProvider] API Error: {webRequest.responseCode} - {webRequest.error}\n{webRequest.downloadHandler.text}"); 
-                    return null; 
+                    Debug.LogError($"[AIImageProvider] API Error: {webRequest.responseCode} - {webRequest.error}\n{webRequest.downloadHandler.text}");
+                    
+                    // Try to parse error response
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<ApiErrorResponse>(webRequest.downloadHandler.text);
+                        if (errorResponse?.error != null)
+                        {
+                            // Check for specific image size validation errors
+                            if (errorResponse.error.code == ErrorCodes.INVALID_SIZE_FORMAT ||
+                                errorResponse.error.code == ErrorCodes.INVALID_SIZE_VALUE ||
+                                errorResponse.error.code == ErrorCodes.SIZE_EXCEEDS_LIMIT ||
+                                errorResponse.error.code == ErrorCodes.SIZE_NOT_MULTIPLE ||
+                                errorResponse.error.code == ErrorCodes.SIZE_NOT_ALLOWED)
+                            {
+                                throw new ImageSizeValidationException(
+                                    errorResponse.error.message,
+                                    errorResponse.error.code,
+                                    request.Size
+                                );
+                            }
+                            
+                            // Throw general API error
+                            throw new ApiErrorException(
+                                errorResponse.error.message,
+                                errorResponse.error.code,
+                                (int)webRequest.responseCode
+                            );
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // If error response parsing fails, continue to throw generic error below
+                    }
+                    catch (ImageSizeValidationException)
+                    {
+                        // Re-throw image size validation exceptions
+                        throw;
+                    }
+                    catch (ApiErrorException)
+                    {
+                        // Re-throw API error exceptions
+                        throw;
+                    }
+                    
+                    throw new DeveloperworksException(
+                        $"API request failed with status {webRequest.responseCode}: {webRequest.error}",
+                        null,
+                        (int)webRequest.responseCode
+                    );
                 }
                 
                 // Parse response

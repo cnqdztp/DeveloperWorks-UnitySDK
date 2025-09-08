@@ -19,7 +19,7 @@ public class ExampleGameManager : MonoBehaviour
         // 这是使用SDK任何功能之前都必须调用的第一步，这会开始读取本地的玩家信息，如果玩家信息不存在或者国旗，则打开登录窗口。
         // 如果传入您的开发者密钥（Developer Key），则会跳过任何鉴权。
         // await DW_SDK.InitializeAsync("dev-f66ce34d-e747-4292-97f5-079f82f10de4");
-        var result = await DW_SDK.InitializeAsync();
+        var result = await DW_SDK.InitializeAsync("dev-b41a6b70-7abc-4ecf-b316-374f4b48caed");
 
         if(!result)
         {
@@ -37,7 +37,7 @@ public class ExampleGameManager : MonoBehaviour
     async UniTask StandardImageGen()
     {
         var imageGen = DW_SDK.Factory.CreateImageClient();
-        var genResult = await imageGen.GenerateImageAsync("a futuristic city");
+        var genResult = await imageGen.GenerateImageAsync("a futuristic city","350x350");
         _image.sprite =  genResult.ToSprite();
     }
     async UniTask StandardChat()

@@ -23,9 +23,6 @@ namespace Developerworks_SDK.Provider.AI
         [JsonProperty("size")]
         public string Size { get; set; }
         
-        [JsonProperty("aspect_ratio")]
-        public string AspectRatio { get; set; }
-        
         [JsonProperty("seed")]
         public int? Seed { get; set; }
         

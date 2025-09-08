@@ -89,7 +89,6 @@ namespace Developerworks_SDK
                 Prompt = prompt,
                 N = count,
                 Size = size,
-                AspectRatio = aspectRatio,
                 Seed = seed
             };
 
@@ -118,10 +117,27 @@ namespace Developerworks_SDK
                 Debug.Log($"[DW_AIImageClient] Successfully generated {results.Count} images");
                 return results;
             }
+            catch (ImageSizeValidationException ex)
+            {
+                // Log a concise error message for size validation
+                // Debug.LogError($"[DW_AIImageClient] Size validation failed ({ex.ErrorCode}): {ex.Message}");
+                throw; // Re-throw for caller to handle
+            }
+            catch (ApiErrorException ex)
+            {
+                // Log API errors concisely
+                // Debug.LogError($"[DW_AIImageClient] API error ({ex.ErrorCode}): {ex.Message}");
+                throw; // Re-throw for caller to handle
+            }
+            catch (DeveloperworksException)
+            {
+                // Don't log here as it's already logged in AIImageProvider
+                throw; // Re-throw for caller to handle
+            }
             catch (Exception ex)
             {
-                Debug.LogError($"[DW_AIImageClient] Image generation failed: {ex.Message}");
-                return null;
+                Debug.LogError($"[DW_AIImageClient] Unexpected error: {ex.Message}");
+                throw new DeveloperworksException("Unexpected error during image generation", ex);
             }
         }
 
@@ -144,7 +160,6 @@ namespace Developerworks_SDK
                 Prompt = prompt,
                 N = options.Count,
                 Size = options.Size,
-                AspectRatio = options.AspectRatio,
                 Seed = options.Seed,
                 ProviderOptions = options.ProviderOptions
             };
@@ -173,10 +188,27 @@ namespace Developerworks_SDK
 
                 return results;
             }
+            catch (ImageSizeValidationException ex)
+            {
+                // Log a concise error message for size validation
+                Debug.LogError($"[DW_AIImageClient] Size validation failed ({ex.ErrorCode}): {ex.Message}");
+                throw; // Re-throw for caller to handle
+            }
+            catch (ApiErrorException ex)
+            {
+                // Log API errors concisely
+                Debug.LogError($"[DW_AIImageClient] API error ({ex.ErrorCode}): {ex.Message}");
+                throw; // Re-throw for caller to handle
+            }
+            catch (DeveloperworksException)
+            {
+                // Don't log here as it's already logged in AIImageProvider
+                throw; // Re-throw for caller to handle
+            }
             catch (Exception ex)
             {
-                Debug.LogError($"[DW_AIImageClient] Image generation failed: {ex.Message}");
-                return null;
+                Debug.LogError($"[DW_AIImageClient] Unexpected error: {ex.Message}");
+                throw new DeveloperworksException("Unexpected error during image generation", ex);
             }
         }
 
@@ -302,12 +334,7 @@ namespace Developerworks_SDK
         /// Image size (e.g., "1024x1024", "1792x1024", "1024x1792")
         /// </summary>
         public string Size { get; set; } = "1024x1024";
-
-        /// <summary>
-        /// Aspect ratio (e.g., "16:9", "1:1", "9:16") - alternative to Size
-        /// </summary>
-        public string AspectRatio { get; set; }
-
+        
         /// <summary>
         /// Seed for reproducible results
         /// </summary>

@@ -8,6 +8,7 @@ namespace Developerworks_SDK
     {
         [SerializeField] private string gameId, defaultChatModel, defaultImageModel;
         [SerializeField] private Auth.DW_AuthManager authManager;
+        [SerializeField] private bool ignoreDeveloperToken;
         public static DW_SDK Instance { get; private set; }
 
         private void Awake()
@@ -38,7 +39,7 @@ namespace Developerworks_SDK
 
 
 
-            if (developerToken != null)
+            if (developerToken != null && !Instance.ignoreDeveloperToken)
             {
                 Debug.Log("[Developerworks SDK] You are loading a developer token, this can cost you money, fine for development...");
                 _dwAuthManager.Setup(Instance.gameId, developerToken);
