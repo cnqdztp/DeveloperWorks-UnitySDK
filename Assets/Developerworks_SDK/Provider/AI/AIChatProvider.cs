@@ -47,7 +47,7 @@ namespace Developerworks_SDK.Provider.AI
             ChatCompletionRequest request, 
             System.Threading.CancellationToken cancellationToken = default)
         {
-            Debug.Log("[AIChatProvider] ChatCompletionAsync");
+            // Debug.Log("[AIChatProvider] ChatCompletionAsync");
             
             // Convert to AI endpoint format if needed (currently same as OpenAI format)
             var json = JsonConvert.SerializeObject(request, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
@@ -87,7 +87,7 @@ namespace Developerworks_SDK.Provider.AI
             Action onFinally, 
             System.Threading.CancellationToken cancellationToken = default)
         {
-            Debug.Log("[AIChatProvider] ChatCompletionStreamAsync");
+            // Debug.Log("[AIChatProvider] ChatCompletionStreamAsync");
             
             var json = JsonConvert.SerializeObject(request, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             

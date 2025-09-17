@@ -13,7 +13,15 @@ namespace Developerworks_SDK
 
         private void Awake()
         {
-            Instance = this;
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(this);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         private static bool _isInitialized = false;
@@ -41,7 +49,7 @@ namespace Developerworks_SDK
 
             if (developerToken != null && !Instance.ignoreDeveloperToken)
             {
-                Debug.Log("[Developerworks SDK] You are loading a developer token, this can cost you money, fine for development...");
+                Debug.Log("[Developerworks SDK] You are loading a developer token, this can cost you money, but is fine for development...");
                 _dwAuthManager.Setup(Instance.gameId, developerToken);
             }
             else

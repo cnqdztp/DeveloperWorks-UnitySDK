@@ -11,7 +11,7 @@ namespace Developerworks_SDK.Example
     /// Simplified example demonstrating the new schema library system for AI Object Generation
     /// This example shows how to use JObject for maximum flexibility without predefined classes
     /// </summary>
-    public class SimpleObjectGenerationExample : MonoBehaviour
+    public class Demo_SimpleObjectGenerationExample : MonoBehaviour
     {
         [Header("Settings")]
         [SerializeField] private DW_SchemaLibrary customSchemaLibrary; // Optional custom library

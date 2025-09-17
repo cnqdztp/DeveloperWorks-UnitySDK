@@ -278,7 +278,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -722,9 +722,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameId: ef6eaf4b-39ae-4c76-bcf6-b07541cf0ccc
-  defaultChatModel: Qwen3
+  defaultChatModel: gpt-4.1-mini
   defaultImageModel: flux-1-schnell
   authManager: {fileID: 1486145430}
+  ignoreDeveloperToken: 0
 --- !u!4 &1486145432
 Transform:
   m_ObjectHideFlags: 0
@@ -950,7 +951,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0df5e715daee492d9a31f28587b35e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customSchemaLibrary: {fileID: 0}
+  customSchemaLibrary: {fileID: 11400000, guid: 8c9e2db0ab23c4ca6bd586a49780b282, type: 2}
   npcClient: {fileID: 2060715946}
 --- !u!4 &2060715945
 Transform:

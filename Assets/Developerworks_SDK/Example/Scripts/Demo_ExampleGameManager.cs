@@ -8,17 +8,21 @@ using Developerworks_SDK.Public;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ExampleGameManager : MonoBehaviour
+public class Demo_ExampleGameManager : MonoBehaviour
 {
     // Start is called before the first frame update
     [SerializeField] private Text _text;
     [SerializeField] private Image _image;
     async void Start()
     {
-        // 初始化 Developerworks SDK。
-        // 这是使用SDK任何功能之前都必须调用的第一步，这会开始读取本地的玩家信息，如果玩家信息不存在或者国旗，则打开登录窗口。
-        // 如果传入您的开发者密钥（Developer Key），则会跳过任何鉴权。
-        // await DW_SDK.InitializeAsync("dev-f66ce34d-e747-4292-97f5-079f82f10de4");
+        /* 初始化 Developerworks SDK。
+         这是使用SDK任何功能之前都必须调用的第一步，这会开始读取本地的玩家信息，如果未登录则自动打开登录窗口。
+         如果传入您的开发者密钥（Developer Key），则会跳过任何鉴权。
+         Initialize Developerworks SDK.
+         This must be called before everything, and it will start to read local player information
+         and if there is not, it will automatically start up the login modal.
+         If you pass in your developer key, the sdk skips player validation.
+         */
         var result = await DW_SDK.InitializeAsync("dev-b41a6b70-7abc-4ecf-b316-374f4b48caed");
 
         if(!result)
@@ -27,7 +31,7 @@ public class ExampleGameManager : MonoBehaviour
             return;
         }
 
-        StandardImageGen();
+        SimpleChatStream();
 
     }
     
@@ -37,7 +41,7 @@ public class ExampleGameManager : MonoBehaviour
     async UniTask StandardImageGen()
     {
         var imageGen = DW_SDK.Factory.CreateImageClient();
-        var genResult = await imageGen.GenerateImageAsync("a futuristic city","350x350");
+        var genResult = await imageGen.GenerateImageAsync("a futuristic city","1024x1024");
         _image.sprite =  genResult.ToSprite();
     }
     async UniTask StandardChat()
@@ -109,8 +113,8 @@ public class ExampleGameManager : MonoBehaviour
             Role = "user",
             Content = "你的工作是什么"
         });
-        await chat.TextChatStreamAsync(new ChatStreamConfig(_selfManagedHistory), (s) =>
-            {
+        await chat.TextChatStreamAsync(new ChatStreamConfig(_selfManagedHistory), 
+            (s) => {
                 var original = _text.text;
                 _text.text = original + s;
             },
@@ -124,7 +128,15 @@ public class ExampleGameManager : MonoBehaviour
     {
 
         var chat = _npcClient;
-        await chat.TalkStream("东京怎么玩？",(s)=>_text.text=s,(s)=>{_text.text=s;});
+        await chat.TalkStream("东京怎么玩？", 
+            (s) => {
+                var original = _text.text;
+                _text.text = original + s;
+            },
+            (s) =>
+            {
+                _text.text = s;
+            });
 
     }
 
