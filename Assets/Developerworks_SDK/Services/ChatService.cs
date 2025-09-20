@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Text; // MODIFIED: Added for StringBuilder
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Developerworks_SDK.Provider.AI;
 
@@ -16,17 +17,17 @@ namespace Developerworks_SDK.Services
         { 
             _chatProvider = chatProvider; 
         }
-        public async UniTask<Public.AIResult<string>> RequestAsync(string model, Public.ChatConfig config)
+        public async UniTask<Public.AIResult<string>> RequestAsync(string model, Public.ChatConfig config, CancellationToken cancellationToken = default)
         {
             var internalMessages = config.Messages.Select(m => new ChatMessage { Role = m.Role, Content = m.Content }).ToList();
             var request = new ChatCompletionRequest { Model = model, Messages = internalMessages, Temperature = config.Temperature, Stream = false };
-            var response = await _chatProvider.ChatCompletionAsync(request);
+            var response = await _chatProvider.ChatCompletionAsync(request, cancellationToken);
             if (response == null || response.Choices == null || response.Choices.Count == 0) return new Public.AIResult<string>("Failed to get a valid response from AI.");
             return new Public.AIResult<string>(data: response.Choices[0].Message.Content);
         }
 
         // MODIFIED: Method signature changed to accept Action<string> for onConcluded.
-        public async UniTask RequestStreamAsync(string model, Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded)
+        public async UniTask RequestStreamAsync(string model, Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
         {
             var internalMessages = config.Messages.Select(m => new ChatMessage { Role = m.Role, Content = m.Content }).ToList();
             var request = new ChatCompletionRequest { Model = model, Messages = internalMessages, Temperature = config.Temperature, Stream = true };
@@ -47,9 +48,9 @@ namespace Developerworks_SDK.Services
             };
 
             await _chatProvider.ChatCompletionStreamAsync(
-                request, 
+                request,
                 // UI Message Stream format callback (preferred)
-                textDelta => 
+                textDelta =>
                 {
                     if (!string.IsNullOrEmpty(textDelta))
                     {
@@ -58,25 +59,26 @@ namespace Developerworks_SDK.Services
                     }
                 },
                 // Legacy format fallback callback
-                streamResponse => 
-                { 
-                    if (streamResponse == null) return; 
-                    
-                    var content = streamResponse.Choices?.FirstOrDefault()?.Delta?.Content; 
-                    
-                    if (!string.IsNullOrEmpty(content)) 
+                streamResponse =>
+                {
+                    if (streamResponse == null) return;
+
+                    var content = streamResponse.Choices?.FirstOrDefault()?.Delta?.Content;
+
+                    if (!string.IsNullOrEmpty(content))
                     {
                         // MODIFIED: Append the new chunk to the builder and invoke the chunk callback.
                         fullResponseBuilder.Append(content);
-                        onNewChunk?.Invoke(content); 
-                    } 
-                    
-                    if (streamResponse.Choices?.FirstOrDefault()?.FinishReason != null) 
-                    {
-                        safeOnConcluded(); 
+                        onNewChunk?.Invoke(content);
                     }
-                }, 
-                safeOnConcluded
+
+                    if (streamResponse.Choices?.FirstOrDefault()?.FinishReason != null)
+                    {
+                        safeOnConcluded();
+                    }
+                },
+                safeOnConcluded,
+                cancellationToken
             );
         }
     }

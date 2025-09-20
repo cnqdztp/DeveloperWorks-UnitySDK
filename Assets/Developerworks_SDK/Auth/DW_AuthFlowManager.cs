@@ -25,7 +25,7 @@ namespace Developerworks_SDK.Auth
         [Tooltip("The rotating spinner element inside the loading modal.")]
         [SerializeField] private RectTransform spinner;
         [Tooltip("A UI Text element to display error messages to the user.")]
-        [SerializeField] private TextMeshProUGUI errorText; // Use TextMeshProUGUI if you prefer
+        [SerializeField] private Text errorText; // Use TextMeshProUGUI if you prefer
 
         [Header("UI Panels")]
         [Tooltip("The panel containing the identifier input and send button.")]
@@ -33,11 +33,13 @@ namespace Developerworks_SDK.Auth
         [Tooltip("The panel containing the code input and verify button.")]
         [SerializeField] private GameObject verificationPanel;
 
+        [SerializeField] private GameObject backBtn;
+
         [Header("UI Interactables")]
         [Tooltip("Input field for the user's email or phone number.")]
-        [SerializeField] private TMP_InputField identifierInput; 
+        [SerializeField] private InputField identifierInput; 
         [Tooltip("Input field for the 6-digit verification code.")]
-        [SerializeField] private TMP_InputField codeInput; 
+        [SerializeField] private InputField codeInput; 
         [Tooltip("The button that triggers sending the verification code.")]
         [SerializeField] private Button sendCodeButton;
         [Tooltip("The button that submits the verification code.")]
@@ -47,7 +49,7 @@ namespace Developerworks_SDK.Auth
         [Tooltip("Icon that indicate identifier type")]
         [SerializeField] private Sprite emailIcon,phoneIcon;
         [SerializeField] private Image identifierIconDisplay;
-        [SerializeField] private TextMeshProUGUI placeholderText;
+        [SerializeField] private Text placeholderText;
         [SerializeField] private GameObject dialogue;
 
         [Header("API Configuration")] [Tooltip("The base URL of your backend authentication API.")]
@@ -65,9 +67,11 @@ namespace Developerworks_SDK.Auth
             // Setup the initial UI state
             identifierPanel.SetActive(true);
             verificationPanel.SetActive(false);
+            backBtn.SetActive(false);
             if (errorText != null) errorText.text = "";
             emailToggle.onValueChanged.AddListener((s)=>OnDropDownChanged(s));
 
+            OnDropDownChanged(emailToggle.isOn);
             // Add listeners to the buttons
             sendCodeButton.onClick.AddListener(OnSendCodeClicked);
             verifyButton.onClick.AddListener(OnVerifyClicked);
@@ -81,6 +85,7 @@ namespace Developerworks_SDK.Auth
         {
             identifierPanel.SetActive(true);
             verificationPanel.SetActive(false);
+            backBtn.SetActive(false);
         }
         private void OnDropDownChanged(bool useEmail)
         {
@@ -110,6 +115,7 @@ namespace Developerworks_SDK.Auth
                 // Switch to the verification panel
                 identifierPanel.SetActive(false);
                 verificationPanel.SetActive(true);
+                backBtn.SetActive(true);
                 sendCodeButton.interactable = true;
             }
         }

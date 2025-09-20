@@ -1,27 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Developerworks_SDK.Example
 {
-    public class Demo_MenuUI : MonoBehaviour
+    public class Demo_ImageSceneManager : MonoBehaviour
     {
-        public static Demo_MenuUI instance;
-        [SerializeField] private GameObject tab, frontpage;
-        private void Awake()
-        {
-            if (instance == null)
-            {
-                instance = this;
-                DontDestroyOnLoad(this);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
         async void Start()
         {
             /* 初始化 Developerworks SDK。
@@ -42,32 +29,34 @@ namespace Developerworks_SDK.Example
             }
 
         }
-        public void ShowMenuScene()
-        {
-            SceneManager.LoadScene("0-Menu");
-            frontpage.SetActive(true);
-            tab.SetActive(false);
-        }
         
-        public void ShowChatScene()
+        [SerializeField] private InputField userInputField;
+        [SerializeField] private Image _image;
+        [SerializeField] private Button sendBtn;
+
+        private void Awake()
         {
-            SceneManager.LoadScene("1-Chat");
-            frontpage.SetActive(false);
-            tab.SetActive(true);
+            sendBtn.onClick.AddListener(()=>OnButtonClicked());
         }
 
-        public void ShowImageScene()
+        private async UniTaskVoid OnButtonClicked()
         {
-            SceneManager.LoadScene("2-Image");
-            frontpage.SetActive(false);
-            tab.SetActive(true);
-        }
+            sendBtn.interactable = false;
+            var imageGen = DW_SDK.Factory.CreateImageClient("flux-1-schnell");
+            try
+            {
+                var genResult = await imageGen.GenerateImageAsync(userInputField.text,"1024x1024");
+                _image.sprite =  genResult.ToSprite();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                // throw;
+            }
+           
+            sendBtn.interactable = true;
 
-        public void ShowStructuredScene()
-        {
-            SceneManager.LoadScene("3-Structured");
-            frontpage.SetActive(false);
-            tab.SetActive(true);
         }
     }
+    
 }

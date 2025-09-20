@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Developerworks_SDK.Provider;
@@ -30,11 +31,12 @@ namespace Developerworks_SDK
         /// <param name="seed">Optional seed for reproducible results</param>
         /// <returns>Generated image with metadata, or null if generation failed</returns>
         public async UniTask<GeneratedImage> GenerateImageAsync(
-            string prompt, 
-            string size = "1024x1024", 
-            int? seed = null)
+            string prompt,
+            string size = "1024x1024",
+            int? seed = null,
+            CancellationToken cancellationToken = default)
         {
-            var results = await GenerateImagesAsync(prompt, 1, size, null, seed);
+            var results = await GenerateImagesAsync(prompt, 1, size, null, seed, cancellationToken);
             return results?.Count > 0 ? results[0] : null;
         }
 
@@ -47,11 +49,12 @@ namespace Developerworks_SDK
         /// <returns>Generated image as base64 string, or null if generation failed</returns>
         [System.Obsolete("Use GenerateImageAsync() which returns GeneratedImage with metadata. This method is kept for backward compatibility.")]
         public async UniTask<string> GenerateImageBase64Async(
-            string prompt, 
-            string size = "1024x1024", 
-            int? seed = null)
+            string prompt,
+            string size = "1024x1024",
+            int? seed = null,
+            CancellationToken cancellationToken = default)
         {
-            var result = await GenerateImageAsync(prompt, size, seed);
+            var result = await GenerateImageAsync(prompt, size, seed, cancellationToken);
             return result?.ImageBase64;
         }
 
@@ -65,11 +68,12 @@ namespace Developerworks_SDK
         /// <param name="seed">Optional seed for reproducible results</param>
         /// <returns>List of generated images with metadata</returns>
         public async UniTask<List<GeneratedImage>> GenerateImagesAsync(
-            string prompt, 
-            int count = 1, 
-            string size = "1024x1024", 
+            string prompt,
+            int count = 1,
+            string size = "1024x1024",
             string aspectRatio = null,
-            int? seed = null)
+            int? seed = null,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(prompt))
             {
@@ -94,7 +98,7 @@ namespace Developerworks_SDK
 
             try
             {
-                var response = await _imageProvider.GenerateImageAsync(request);
+                var response = await _imageProvider.GenerateImageAsync(request, cancellationToken);
                 
                 if (response?.Data == null)
                 {
@@ -147,11 +151,11 @@ namespace Developerworks_SDK
         /// <param name="prompt">Text description of the desired images</param>
         /// <param name="options">Advanced generation options</param>
         /// <returns>List of generated images with metadata</returns>
-        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(string prompt, ImageGenerationOptions options)
+        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(string prompt, ImageGenerationOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null)
             {
-                return await GenerateImagesAsync(prompt);
+                return await GenerateImagesAsync(prompt, cancellationToken: cancellationToken);
             }
 
             var request = new ImageGenerationRequest
@@ -166,8 +170,8 @@ namespace Developerworks_SDK
 
             try
             {
-                var response = await _imageProvider.GenerateImageAsync(request);
-                
+                var response = await _imageProvider.GenerateImageAsync(request, cancellationToken);
+
                 if (response?.Data == null)
                 {
                     Debug.LogError("[DW_AIImageClient] Image generation failed - no response data");

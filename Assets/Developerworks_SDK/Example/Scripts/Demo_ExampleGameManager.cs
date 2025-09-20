@@ -140,9 +140,4 @@ public class Demo_ExampleGameManager : MonoBehaviour
 
     }
 
-    async void StructuredChat()
-    {
-        // var chat = 
-    }
-
 }

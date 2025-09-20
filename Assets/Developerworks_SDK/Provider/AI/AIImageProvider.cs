@@ -47,7 +47,7 @@ namespace Developerworks_SDK.Provider.AI
             ImageGenerationRequest request, 
             System.Threading.CancellationToken cancellationToken = default)
         {
-            Debug.Log("[AIImageProvider] GenerateImageAsync");
+            // Debug.Log("[AIImageProvider] GenerateImageAsync");
             
             // Validate request
             if (string.IsNullOrEmpty(request.Model))

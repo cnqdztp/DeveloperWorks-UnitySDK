@@ -40,6 +40,13 @@ namespace Developerworks_SDK
             if (!Instance)
             {
                 Debug.LogError("Please place DW_SDK object in your FIRST scene.");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(Instance.gameId))
+            {
+                Debug.LogError("Please fill in gameId from your game. Get one from https://developerworks.agentlandlab.com");
+                return false;
             }
             
             Debug.Log("[Developerworks SDK] Initializing...");

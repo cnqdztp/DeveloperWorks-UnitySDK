@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Developerworks_SDK.Public;
 using UnityEngine;
@@ -14,6 +15,8 @@ namespace Developerworks_SDK
     public class DW_NPCClient : MonoBehaviour
     {
         [SerializeField] private string characterDesign;
+        [SerializeField] private string chatModel;
+        public string CharacterDesign=>characterDesign;
         private DW_AIChatClient _chatClient;
         private List<ChatMessage> _conversationHistory;
         private string _currentPrompt;
@@ -39,9 +42,17 @@ namespace Developerworks_SDK
         private async UniTask Initialize()
         {
             await UniTask.WaitUntil(() => DW_SDK.IsReady());
-            if(string.IsNullOrEmpty(characterDesign))
+            if(!string.IsNullOrEmpty(characterDesign))
                 SetSystemPrompt(characterDesign);
-            DW_SDK.Populate.CreateNpc(this);
+            if (!string.IsNullOrEmpty(chatModel))
+            {
+                DW_SDK.Populate.CreateNpc(this,chatModel);
+            }
+            else
+            {
+                DW_SDK.Populate.CreateNpc(this);
+
+            }
         }
 
         /// <summary>
@@ -49,9 +60,11 @@ namespace Developerworks_SDK
         /// The conversation history is automatically managed.
         /// </summary>
         /// <param name="message">The message to send to the NPC</param>
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
         /// <returns>The NPC's response</returns>
-        public async UniTask<string> Talk(string message)
+        public async UniTask<string> Talk(string message, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             if (!gameObject.activeInHierarchy)
@@ -75,7 +88,7 @@ namespace Developerworks_SDK
             {
                 // Create chat config with full conversation history
                 var config = new ChatConfig(_conversationHistory.ToList());
-                var result = await _chatClient.TextGenerationAsync(config);
+                var result = await _chatClient.TextGenerationAsync(config, token);
 
                 if (result.Success && !string.IsNullOrEmpty(result.Response))
                 {
@@ -111,9 +124,11 @@ namespace Developerworks_SDK
         /// </summary>
         /// <param name="message">The message to send to the NPC</param>
         /// <param name="schemaName">Name of the schema to use</param>
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
         /// <returns>The structured response as JObject, or null if failed</returns>
-        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructured(string message, string schemaName)
+        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructured(string message, string schemaName, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             
@@ -144,7 +159,7 @@ namespace Developerworks_SDK
             try
             {
                 // Use ChatClient's structured output capability
-                var result = await _chatClient.GenerateStructuredAsync(schemaName, fullPrompt, _currentPrompt);
+                var result = await _chatClient.GenerateStructuredAsync(schemaName, fullPrompt, _currentPrompt, cancellationToken: token);
 
                 if (result != null)
                 {
@@ -189,9 +204,11 @@ namespace Developerworks_SDK
         /// <typeparam name="T">The type to deserialize the structured response to</typeparam>
         /// <param name="message">The message to send to the NPC</param>
         /// <param name="schemaName">The name of the schema to use</param>
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
         /// <returns>The structured response deserialized to type T</returns>
-        public async UniTask<T> TalkStructured<T>(string message, string schemaName)
+        public async UniTask<T> TalkStructured<T>(string message, string schemaName, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             
@@ -222,7 +239,7 @@ namespace Developerworks_SDK
             try
             {
                 // Use ChatClient's structured output capability with generic type
-                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, fullPrompt, _currentPrompt);
+                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, fullPrompt, _currentPrompt, cancellationToken: token);
 
                 // Add user message to history
                 _conversationHistory.Add(new ChatMessage
@@ -330,8 +347,10 @@ namespace Developerworks_SDK
         /// <param name="message">The message to send to the NPC</param>
         /// <param name="onChunk">Called for each piece of the response as it streams in</param>
         /// <param name="onComplete">Called when the complete response is ready</param>
-        public async UniTask TalkStream(string message, Action<string> onChunk, Action<string> onComplete)
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
+        public async UniTask TalkStream(string message, Action<string> onChunk, Action<string> onComplete, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             if (string.IsNullOrEmpty(message))
@@ -352,7 +371,7 @@ namespace Developerworks_SDK
             {
                 var config = new ChatStreamConfig(_conversationHistory.ToList());
                 
-                await _chatClient.TextChatStreamAsync(config, 
+                await _chatClient.TextChatStreamAsync(config,
                     chunk =>
                     {
                         // Forward each chunk to the caller
@@ -370,10 +389,11 @@ namespace Developerworks_SDK
                                 Content = completeResponse
                             });
                         }
-                        
+
                         // Notify caller that response is complete
                         onComplete?.Invoke(completeResponse);
-                    }
+                    },
+                    token
                 );
             }
             catch (Exception ex)
@@ -596,9 +616,11 @@ namespace Developerworks_SDK
         /// </summary>
         /// <param name="message">The message to send to the NPC</param>
         /// <param name="schemaName">Name of the schema to use</param>
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
         /// <returns>The structured response as JObject, or null if failed</returns>
-        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructuredWithHistory(string message, string schemaName)
+        public async UniTask<Newtonsoft.Json.Linq.JObject> TalkStructuredWithHistory(string message, string schemaName, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             
@@ -632,7 +654,7 @@ namespace Developerworks_SDK
             try
             {
                 // Use ChatClient's structured output with full message history
-                var result = await _chatClient.GenerateStructuredAsync(schemaName, _conversationHistory);
+                var result = await _chatClient.GenerateStructuredAsync(schemaName, _conversationHistory, cancellationToken: token);
 
                 if (result != null)
                 {
@@ -670,9 +692,11 @@ namespace Developerworks_SDK
         /// <typeparam name="T">The type to deserialize the structured response to</typeparam>
         /// <param name="message">The message to send to the NPC</param>
         /// <param name="schemaName">The name of the schema to use</param>
+        /// <param name="cancellationToken">Cancellation token (defaults to OnDestroyCancellationToken)</param>
         /// <returns>The structured response deserialized to type T</returns>
-        public async UniTask<T> TalkStructuredWithHistory<T>(string message, string schemaName)
+        public async UniTask<T> TalkStructuredWithHistory<T>(string message, string schemaName, CancellationToken? cancellationToken = null)
         {
+            var token = cancellationToken ?? this.GetCancellationTokenOnDestroy();
             _isTalking = true;
             await UniTask.WaitUntil(() => IsReady);
             
@@ -706,7 +730,7 @@ namespace Developerworks_SDK
             try
             {
                 // Use ChatClient's structured output with full message history and generic type
-                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, _conversationHistory);
+                var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, _conversationHistory, cancellationToken: token);
 
                 // Smart handling: Look for .talk field in structured response  
                 var jobject = Newtonsoft.Json.Linq.JObject.FromObject(result);

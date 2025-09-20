@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
@@ -53,17 +54,17 @@ namespace Developerworks_SDK
         /// <summary>
         /// Generate text using chat completion
         /// </summary>
-        public async UniTask<Public.AIResult<string>> TextGenerationAsync(Public.ChatConfig config)
+        public async UniTask<Public.AIResult<string>> TextGenerationAsync(Public.ChatConfig config, CancellationToken cancellationToken = default)
         {
-            return await _chatService.RequestAsync(_model, config);
+            return await _chatService.RequestAsync(_model, config, cancellationToken);
         }
 
         /// <summary>
         /// Generate text using streaming chat completion
         /// </summary>
-        public async UniTask TextChatStreamAsync(Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded)
+        public async UniTask TextChatStreamAsync(Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
         {
-            await _chatService.RequestStreamAsync(_model, config, onNewChunk, onConcluded);
+            await _chatService.RequestStreamAsync(_model, config, onNewChunk, onConcluded, cancellationToken);
         }
 
         /// <summary>
@@ -80,7 +81,8 @@ namespace Developerworks_SDK
             string prompt,
             string systemMessage = null,
             float? temperature = null,
-            int? maxTokens = null)
+            int? maxTokens = null,
+            CancellationToken cancellationToken = default)
         {
             if (_schemaLibrary == null)
             {
@@ -135,8 +137,8 @@ namespace Developerworks_SDK
 
             try
             {
-                var response = await _objectProvider.GenerateObjectAsync<object>(request);
-                
+                var response = await _objectProvider.GenerateObjectAsync<object>(request, cancellationToken);
+
                 if (response?.Object != null)
                 {
                     // Convert the response object to JObject for maximum flexibility
@@ -179,9 +181,10 @@ namespace Developerworks_SDK
             string prompt,
             string systemMessage = null,
             float? temperature = null,
-            int? maxTokens = null)
+            int? maxTokens = null,
+            CancellationToken cancellationToken = default)
         {
-            var jobject = await GenerateStructuredAsync(schemaName, prompt, systemMessage, temperature, maxTokens);
+            var jobject = await GenerateStructuredAsync(schemaName, prompt, systemMessage, temperature, maxTokens, cancellationToken);
             
             if (jobject == null)
             {
@@ -211,7 +214,8 @@ namespace Developerworks_SDK
             string schemaName,
             List<Public.ChatMessage> messages,
             float? temperature = null,
-            int? maxTokens = null)
+            int? maxTokens = null,
+            CancellationToken cancellationToken = default)
         {
             if (_schemaLibrary == null)
             {
@@ -265,8 +269,8 @@ namespace Developerworks_SDK
 
             try
             {
-                var response = await _objectProvider.GenerateObjectAsync<object>(request);
-                
+                var response = await _objectProvider.GenerateObjectAsync<object>(request, cancellationToken);
+
                 if (response?.Object != null)
                 {
                     // Convert the response object to JObject for maximum flexibility
@@ -307,9 +311,10 @@ namespace Developerworks_SDK
             string schemaName,
             List<Public.ChatMessage> messages,
             float? temperature = null,
-            int? maxTokens = null)
+            int? maxTokens = null,
+            CancellationToken cancellationToken = default)
         {
-            var jobject = await GenerateStructuredAsync(schemaName, messages, temperature, maxTokens);
+            var jobject = await GenerateStructuredAsync(schemaName, messages, temperature, maxTokens, cancellationToken);
             
             if (jobject == null)
             {
@@ -343,7 +348,8 @@ namespace Developerworks_SDK
             string schemaName = "DirectSchema",
             string systemMessage = null,
             float? temperature = null,
-            int? maxTokens = null)
+            int? maxTokens = null,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(schemaJson))
             {
@@ -382,7 +388,7 @@ namespace Developerworks_SDK
 
             try
             {
-                var response = await _objectProvider.GenerateObjectAsync<object>(request);
+                var response = await _objectProvider.GenerateObjectAsync<object>(request, cancellationToken);
                 
                 if (response?.Object != null)
                 {
