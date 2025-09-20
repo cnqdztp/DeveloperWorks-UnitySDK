@@ -16,7 +16,7 @@ namespace Developerworks_SDK
         private string baseUrl = "https://developerworks.agentlandlab.com";
         private int timeoutSeconds = 30;
         private int maxRetryCount = 3;
-        private float retryDelaySeconds = 1.0f;
+        private float retryDelaySeconds = 3.0f;
         private bool enableDebugLogs = true;
 
         private string currentJWT;
@@ -159,7 +159,7 @@ namespace Developerworks_SDK
                 return new ApiResult<PlayerInfo> { Success = false, Error = error };
             }
             
-            string url = $"{baseUrl}/api/player-info";
+            string url = $"{baseUrl}/api/external/player-info";
             var result = await GetRequestAsync<PlayerInfo>(url, authToken, cancellationToken);
             
             if (result.Success)

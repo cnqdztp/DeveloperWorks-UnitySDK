@@ -42,18 +42,18 @@ namespace Developerworks_SDK.Auth
             // Step 1: Try loading Player Token from PlayerPrefs
             LoadPlayerToken();
 
-            if (IsTokenValid())
+            if (await IsTokenValidWithAPICheck())
             {
-                Debug.Log("[Developerworks SDK] Existing valid player token found.");
+                Debug.Log("[Developerworks SDK] Existing valid player token found and verified.");
                 return true;
             }
 
             // Step 2: Try loading Shared Token if Player Token not found
             LoadSharedToken();
-            
-            if (IsTokenValid())
+
+            if (await IsTokenValidWithAPICheck())
             {
-                Debug.Log("[Developerworks SDK] Valid shared token found and loaded.");
+                Debug.Log("[Developerworks SDK] Valid shared token found, loaded and verified.");
                 // Also save it as Player Token for consistency
                 SavePlayerTokenFromShared();
                 return true;
@@ -169,6 +169,77 @@ namespace Developerworks_SDK.Auth
             }
 
             return true;
+        }
+
+        private async UniTask<bool> IsTokenValidWithAPICheck()
+        {
+            if (string.IsNullOrEmpty(AuthToken))
+            {
+                return false;
+            }
+
+            // Developer tokens are always considered valid.
+            if (IsDeveloperToken)
+            {
+                return true;
+            }
+
+            // First check expiry for Player Tokens.
+            string expiryString = PlayerPrefs.GetString(TokenExpiryKey, "0");
+            if (long.TryParse(expiryString, out long expiryTicks))
+            {
+                if (DateTime.UtcNow.Ticks > expiryTicks)
+                {
+                    Debug.Log("[Developerworks SDK] Player token has expired based on stored expiry.");
+                    ClearPlayerToken(); // Clean up expired token
+                    return false;
+                }
+            }
+            else
+            {
+                // If expiry date is not a valid long, treat it as invalid.
+                Debug.Log("[Developerworks SDK] Invalid expiry date format.");
+                ClearPlayerToken();
+                return false;
+            }
+
+            // Token hasn't expired according to stored data, now verify with API
+            if (PlayerClient != null)
+            {
+                // Set the token in the client if not already set
+                if (!PlayerClient.HasValidPlayerToken())
+                {
+                    PlayerClient.SetPlayerToken(AuthToken);
+                }
+
+                try
+                {
+                    Debug.Log("[Developerworks SDK] Verifying token with player-info API...");
+                    var result = await PlayerClient.GetPlayerInfoAsync();
+
+                    if (!result.Success)
+                    {
+                        Debug.LogWarning($"[Developerworks SDK] Token verification failed: {result.Error}");
+                        ClearPlayerToken(); // Clear invalid token
+                        return false;
+                    }
+
+                    Debug.Log($"[Developerworks SDK] Token verified successfully. User ID: {result.Data.UserId}");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Developerworks SDK] Error verifying token: {e.Message}");
+                    // Don't clear token on network error - might be temporary
+                    return false;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[Developerworks SDK] PlayerClient not available for token verification.");
+                // If we can't verify with API, trust the expiry check
+                return true;
+            }
         }
         
         // CHANGED: Renamed and updated to handle the Player Token and its specific expiry format.
