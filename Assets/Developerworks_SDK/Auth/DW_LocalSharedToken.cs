@@ -5,10 +5,12 @@ using System.Security.Cryptography;
 #endif
 using System.Text;
 using UnityEngine;
+using Developerworks_SDK.Core;
 
 public static class DW_LocalSharedToken
 {
     private const string TokenFileName = "shared_token.txt";
+    private const string SharedFolderName = "DeveloperWorks_SDK";
 
 #if !UNITY_WEBGL
     // base64 转换成真正的 key/iv (仅在非 WebGL 平台使用)
@@ -34,7 +36,8 @@ public static class DW_LocalSharedToken
             return null;
         }
 
-        string fullPath = Path.Combine(folderPath, "MyUnitySharedData");
+        // 使用DeveloperWorks SDK专用的跨游戏共享文件夹
+        string fullPath = Path.Combine(folderPath, SharedFolderName);
         if (!Directory.Exists(fullPath))
         {
             Directory.CreateDirectory(fullPath);
@@ -49,18 +52,17 @@ public static class DW_LocalSharedToken
         try
         {
 #if UNITY_WEBGL
-            // WebGL：直接存储到 localStorage，不加密
-            PlayerPrefs.SetString("shared_token", token);
-            PlayerPrefs.Save();
-            Debug.Log("Token saved (unencrypted for WebGL).");
+            // WebGL：不保存token，只读取
+            Debug.Log("WebGL版本不保存token到localStorage");
+            return;
 #else
-            // 其他平台：加密后存储
+            // 其他平台：加密后存储到跨游戏共享位置
             byte[] encrypted = EncryptStringToBytes_Aes(token, AesKey, AesIV);
             var path = GetSharedFilePath();
             if (string.IsNullOrEmpty(path)) return;
 
             File.WriteAllBytes(path, encrypted);
-            Debug.Log("Token saved (encrypted).");
+            Debug.Log($"Token saved (encrypted) to shared location: {Path.GetDirectoryName(path)}");
 #endif
         }
         catch (Exception e)
@@ -74,10 +76,10 @@ public static class DW_LocalSharedToken
         try
         {
 #if UNITY_WEBGL
-            // WebGL：直接从 localStorage 读取，不解密
-            if (PlayerPrefs.HasKey("shared_token"))
+            // WebGL：从localStorage读取，不解密
+            if (DW_WebGLStorage.HasKey("shared_token"))
             {
-                string token = PlayerPrefs.GetString("shared_token");
+                string token = DW_WebGLStorage.GetItem("shared_token");
                 return token;
             }
             else
@@ -93,11 +95,13 @@ public static class DW_LocalSharedToken
             if (File.Exists(path))
             {
                 byte[] encrypted = File.ReadAllBytes(path);
-                return DecryptStringFromBytes_Aes(encrypted, AesKey, AesIV);
+                var token = DecryptStringFromBytes_Aes(encrypted, AesKey, AesIV);
+                Debug.Log($"Token loaded from shared location: {Path.GetDirectoryName(path)}");
+                return token;
             }
             else
             {
-                Debug.LogWarning("Token file not found.");
+                Debug.LogWarning($"Token file not found at shared location: {path}");
                 return null;
             }
 #endif
@@ -114,12 +118,8 @@ public static class DW_LocalSharedToken
         try
         {
 #if UNITY_WEBGL
-            if (PlayerPrefs.HasKey("shared_token"))
-            {
-                PlayerPrefs.DeleteKey("shared_token");
-                PlayerPrefs.Save();
-                Debug.Log("Token erased from localStorage.");
-            }
+            DW_WebGLStorage.RemoveItem("shared_token");
+            Debug.Log("Token erased from localStorage.");
 #else
             string path = GetSharedFilePath();
             if (File.Exists(path))

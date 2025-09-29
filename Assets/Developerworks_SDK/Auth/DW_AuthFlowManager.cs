@@ -22,8 +22,7 @@ namespace Developerworks_SDK.Auth
         [Header("Core UI")]
         [Tooltip("The modal GameObject shown during loading.")]
         [SerializeField] private GameObject loadingModal;
-        [Tooltip("The rotating spinner element inside the loading modal.")]
-        [SerializeField] private RectTransform spinner;
+        
         [Tooltip("A UI Text element to display error messages to the user.")]
         [SerializeField] private Text errorText; // Use TextMeshProUGUI if you prefer
 
@@ -60,7 +59,6 @@ namespace Developerworks_SDK.Auth
 
         // --- Private State ---
         private string _currentSessionId;
-        private Coroutine _spinCoroutine;
 
         private async void Start()
         {
@@ -90,7 +88,7 @@ namespace Developerworks_SDK.Auth
         private void OnDropDownChanged(bool useEmail)
         {
             identifierIconDisplay.sprite = useEmail ? emailIcon : phoneIcon;
-            placeholderText.text = "Enter your" + (useEmail ? "email address" : "phone number");
+            placeholderText.text = "Enter your " + (useEmail ? "email address" : "phone number (+86 Only)");
         }
 
 
@@ -354,30 +352,16 @@ namespace Developerworks_SDK.Auth
         private void ShowLoadingModal()
         {
             if (loadingModal != null) loadingModal.SetActive(true);
-            if (_spinCoroutine == null && spinner != null)
-            {
-                _spinCoroutine = StartCoroutine(Spin());
-            }
+            
         }
 
         private void HideLoadingModal()
         {
             if (loadingModal != null) loadingModal.SetActive(false);
-            if (_spinCoroutine != null)
-            {
-                StopCoroutine(_spinCoroutine);
-                _spinCoroutine = null;
-            }
+            
         }
 
-        private IEnumerator Spin()
-        {
-            while (true)
-            {
-                spinner.Rotate(0f, 0f, -180f * Time.deltaTime);
-                yield return null;
-            }
-        }
+
         
         #endregion
 

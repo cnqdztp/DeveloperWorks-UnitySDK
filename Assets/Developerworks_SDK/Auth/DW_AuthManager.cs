@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Developerworks_SDK.Art;
 using UnityEngine;
 
 namespace Developerworks_SDK.Auth
@@ -16,6 +17,7 @@ namespace Developerworks_SDK.Auth
 
         [SerializeField]private DW_PlayerClient _playerClient;
         public DW_PlayerClient PlayerClient { get => _playerClient; }
+        [SerializeField] private LoadingSpinner standaloneLoadingObject;
 
         public void Setup(string publishableKey, string developerToken = null)
         {
@@ -26,20 +28,36 @@ namespace Developerworks_SDK.Auth
                 AuthToken = developerToken;
                 IsDeveloperToken = true;
             }
-            
+            if(standaloneLoadingObject == null)
+            {
+                var loginWebPrefab = Resources.Load<GameObject>("Loading");
+                standaloneLoadingObject = Instantiate(loginWebPrefab).GetComponent<LoadingSpinner>();
+            }
             
         }
 
         public async UniTask<bool> AuthenticateAsync()
         {
+            standaloneLoadingObject.gameObject.SetActive(true);
             // If using a developer token, authentication is always considered successful.
             if (IsDeveloperToken)
             {
                 Debug.Log("[Developerworks SDK] Using developer token. Authentication successful.");
                 return true;
             }
+            // Step 1: Try loading Shared Token if Player Token not found
 
-            // Step 1: Try loading Player Token from PlayerPrefs
+            LoadSharedToken();
+
+            if (await IsTokenValidWithAPICheck())
+            {
+                Debug.Log("[Developerworks SDK] Valid shared token found, loaded and verified.");
+                // Also save it as Player Token for consistency
+                // SavePlayerTokenFromShared();
+                return true;
+            }
+
+            // Step 2: Try loading Player Token from PlayerPrefs
             LoadPlayerToken();
 
             if (await IsTokenValidWithAPICheck())
@@ -48,19 +66,10 @@ namespace Developerworks_SDK.Auth
                 return true;
             }
 
-            // Step 2: Try loading Shared Token if Player Token not found
-            LoadSharedToken();
-
-            if (await IsTokenValidWithAPICheck())
-            {
-                Debug.Log("[Developerworks SDK] Valid shared token found, loaded and verified.");
-                // Also save it as Player Token for consistency
-                SavePlayerTokenFromShared();
-                return true;
-            }
-
             // Step 3: No valid tokens found, initiate login process
             Debug.Log("[Developerworks SDK] No valid player or shared token found. Initiating login process.");
+            standaloneLoadingObject.gameObject.SetActive(false);
+
             return await ShowLoginWebAsync();
         }
 
@@ -185,6 +194,8 @@ namespace Developerworks_SDK.Auth
             }
 
             // First check expiry for Player Tokens.
+#if !UNITY_WEBGL
+
             string expiryString = PlayerPrefs.GetString(TokenExpiryKey, "0");
             if (long.TryParse(expiryString, out long expiryTicks))
             {
@@ -202,6 +213,7 @@ namespace Developerworks_SDK.Auth
                 ClearPlayerToken();
                 return false;
             }
+#endif
 
             // Token hasn't expired according to stored data, now verify with API
             if (PlayerClient != null)
