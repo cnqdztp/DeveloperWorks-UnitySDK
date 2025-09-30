@@ -17,9 +17,9 @@ namespace Developerworks_SDK.Provider.AI
         
         [JsonProperty("prompt")]
         public string Prompt { get; set; }
-        
+
         [JsonProperty("messages")]
-        public List<Developerworks_SDK.Public.ChatMessage> Messages { get; set; }
+        public List<Developerworks_SDK.Public.DW_ChatMessage> Messages { get; set; }
         
         [JsonProperty("schema")]
         public object Schema { get; set; }

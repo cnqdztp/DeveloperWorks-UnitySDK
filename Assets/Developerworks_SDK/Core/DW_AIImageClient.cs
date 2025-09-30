@@ -30,7 +30,7 @@ namespace Developerworks_SDK
         /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
         /// <param name="seed">Optional seed for reproducible results</param>
         /// <returns>Generated image with metadata, or null if generation failed</returns>
-        public async UniTask<GeneratedImage> GenerateImageAsync(
+        public async UniTask<DW_GeneratedImage> GenerateImageAsync(
             string prompt,
             string size = "1024x1024",
             int? seed = null,
@@ -47,7 +47,7 @@ namespace Developerworks_SDK
         /// <param name="size">Image size (e.g., "1024x1024", "1792x1024", "1024x1792")</param>
         /// <param name="seed">Optional seed for reproducible results</param>
         /// <returns>Generated image as base64 string, or null if generation failed</returns>
-        [System.Obsolete("Use GenerateImageAsync() which returns GeneratedImage with metadata. This method is kept for backward compatibility.")]
+        [System.Obsolete("Use GenerateImageAsync() which returns DW_GeneratedImage with metadata. This method is kept for backward compatibility.")]
         public async UniTask<string> GenerateImageBase64Async(
             string prompt,
             string size = "1024x1024",
@@ -67,7 +67,7 @@ namespace Developerworks_SDK
         /// <param name="aspectRatio">Aspect ratio (e.g., "16:9", "1:1", "9:16") - alternative to size</param>
         /// <param name="seed">Optional seed for reproducible results</param>
         /// <returns>List of generated images with metadata</returns>
-        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(
+        public async UniTask<List<DW_GeneratedImage>> GenerateImagesAsync(
             string prompt,
             int count = 1,
             string size = "1024x1024",
@@ -106,10 +106,10 @@ namespace Developerworks_SDK
                     return null;
                 }
 
-                var results = new List<GeneratedImage>();
+                var results = new List<DW_GeneratedImage>();
                 foreach (var imageData in response.Data)
                 {
-                    results.Add(new GeneratedImage
+                    results.Add(new DW_GeneratedImage
                     {
                         ImageBase64 = imageData.B64Json,
                         RevisedPrompt = imageData.RevisedPrompt,
@@ -121,19 +121,19 @@ namespace Developerworks_SDK
                 Debug.Log($"[DW_AIImageClient] Successfully generated {results.Count} images");
                 return results;
             }
-            catch (ImageSizeValidationException ex)
+            catch (DW_ImageSizeValidationException ex)
             {
                 // Log a concise error message for size validation
                 // Debug.LogError($"[DW_AIImageClient] Size validation failed ({ex.ErrorCode}): {ex.Message}");
                 throw; // Re-throw for caller to handle
             }
-            catch (ApiErrorException ex)
+            catch (DW_ApiErrorException ex)
             {
                 // Log API errors concisely
                 // Debug.LogError($"[DW_AIImageClient] API error ({ex.ErrorCode}): {ex.Message}");
                 throw; // Re-throw for caller to handle
             }
-            catch (DeveloperworksException)
+            catch (DWException)
             {
                 // Don't log here as it's already logged in AIImageProvider
                 throw; // Re-throw for caller to handle
@@ -141,7 +141,7 @@ namespace Developerworks_SDK
             catch (Exception ex)
             {
                 Debug.LogError($"[DW_AIImageClient] Unexpected error: {ex.Message}");
-                throw new DeveloperworksException("Unexpected error during image generation", ex);
+                throw new DWException("Unexpected error during image generation", ex);
             }
         }
 
@@ -151,7 +151,7 @@ namespace Developerworks_SDK
         /// <param name="prompt">Text description of the desired images</param>
         /// <param name="options">Advanced generation options</param>
         /// <returns>List of generated images with metadata</returns>
-        public async UniTask<List<GeneratedImage>> GenerateImagesAsync(string prompt, ImageGenerationOptions options, CancellationToken cancellationToken = default)
+        public async UniTask<List<DW_GeneratedImage>> GenerateImagesAsync(string prompt, DW_ImageGenerationOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null)
             {
@@ -178,10 +178,10 @@ namespace Developerworks_SDK
                     return null;
                 }
 
-                var results = new List<GeneratedImage>();
+                var results = new List<DW_GeneratedImage>();
                 foreach (var imageData in response.Data)
                 {
-                    results.Add(new GeneratedImage
+                    results.Add(new DW_GeneratedImage
                     {
                         ImageBase64 = imageData.B64Json,
                         RevisedPrompt = imageData.RevisedPrompt,
@@ -192,19 +192,19 @@ namespace Developerworks_SDK
 
                 return results;
             }
-            catch (ImageSizeValidationException ex)
+            catch (DW_ImageSizeValidationException ex)
             {
                 // Log a concise error message for size validation
                 Debug.LogError($"[DW_AIImageClient] Size validation failed ({ex.ErrorCode}): {ex.Message}");
                 throw; // Re-throw for caller to handle
             }
-            catch (ApiErrorException ex)
+            catch (DW_ApiErrorException ex)
             {
                 // Log API errors concisely
                 Debug.LogError($"[DW_AIImageClient] API error ({ex.ErrorCode}): {ex.Message}");
                 throw; // Re-throw for caller to handle
             }
-            catch (DeveloperworksException)
+            catch (DWException)
             {
                 // Don't log here as it's already logged in AIImageProvider
                 throw; // Re-throw for caller to handle
@@ -212,7 +212,7 @@ namespace Developerworks_SDK
             catch (Exception ex)
             {
                 Debug.LogError($"[DW_AIImageClient] Unexpected error: {ex.Message}");
-                throw new DeveloperworksException("Unexpected error during image generation", ex);
+                throw new DWException("Unexpected error during image generation", ex);
             }
         }
 
@@ -282,7 +282,7 @@ namespace Developerworks_SDK
     /// Represents a generated image with metadata
     /// </summary>
     [System.Serializable]
-    public class GeneratedImage
+    public class DW_GeneratedImage
     {
         /// <summary>
         /// Base64 encoded image data
@@ -327,7 +327,7 @@ namespace Developerworks_SDK
     /// Advanced options for image generation
     /// </summary>
     [System.Serializable]
-    public class ImageGenerationOptions
+    public class DW_ImageGenerationOptions
     {
         /// <summary>
         /// Number of images to generate (1-10)

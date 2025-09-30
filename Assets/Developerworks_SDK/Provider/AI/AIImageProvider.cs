@@ -81,26 +81,26 @@ namespace Developerworks_SDK.Provider.AI
                         // Try to parse error response
                         try
                         {
-                            var errorResponse = JsonConvert.DeserializeObject<ApiErrorResponse>(webRequest.downloadHandler.text);
+                            var errorResponse = JsonConvert.DeserializeObject<DW_ApiErrorResponse>(webRequest.downloadHandler.text);
                             if (errorResponse?.error != null)
                             {
                                 // Check for specific image size validation errors
-                                if (errorResponse.error.code == ErrorCodes.INVALID_SIZE_FORMAT ||
-                                    errorResponse.error.code == ErrorCodes.INVALID_SIZE_VALUE ||
-                                    errorResponse.error.code == ErrorCodes.SIZE_EXCEEDS_LIMIT ||
-                                    errorResponse.error.code == ErrorCodes.SIZE_NOT_MULTIPLE ||
-                                    errorResponse.error.code == ErrorCodes.SIZE_NOT_ALLOWED)
+                                if (errorResponse.error.code == DW_ErrorCodes.INVALID_SIZE_FORMAT ||
+                                    errorResponse.error.code == DW_ErrorCodes.INVALID_SIZE_VALUE ||
+                                    errorResponse.error.code == DW_ErrorCodes.SIZE_EXCEEDS_LIMIT ||
+                                    errorResponse.error.code == DW_ErrorCodes.SIZE_NOT_MULTIPLE ||
+                                    errorResponse.error.code == DW_ErrorCodes.SIZE_NOT_ALLOWED)
                                 {
                                     // Don't log here, let the caller handle it
-                                    throw new ImageSizeValidationException(
+                                    throw new DW_ImageSizeValidationException(
                                         errorResponse.error.message,
                                         errorResponse.error.code,
                                         request.Size
                                     );
                                 }
-                                
+
                                 // Throw general API error
-                                throw new ApiErrorException(
+                                throw new DW_ApiErrorException(
                                     errorResponse.error.message,
                                     errorResponse.error.code,
                                     (int)webRequest.responseCode
@@ -116,12 +116,12 @@ namespace Developerworks_SDK.Provider.AI
                     
                     // Only log for actual network/unknown errors
                     Debug.LogError($"[AIImageProvider] API request failed: {ex.Message}");
-                    throw new DeveloperworksException($"Network request failed: {ex.Message}", ex);
+                    throw new DWException($"Network request failed: {ex.Message}", ex);
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException) && !(ex is ImageSizeValidationException) && !(ex is ApiErrorException) && !(ex is DeveloperworksException))
+                catch (Exception ex) when (!(ex is OperationCanceledException) && !(ex is DW_ImageSizeValidationException) && !(ex is DW_ApiErrorException) && !(ex is DWException))
                 {
                     Debug.LogError($"[AIImageProvider] Unexpected error: {ex.Message}");
-                    throw new DeveloperworksException($"Unexpected error: {ex.Message}", ex);
+                    throw new DWException($"Unexpected error: {ex.Message}", ex);
                 }
                 
                 if (webRequest.result != UnityWebRequest.Result.Success) 
@@ -131,25 +131,25 @@ namespace Developerworks_SDK.Provider.AI
                     // Try to parse error response
                     try
                     {
-                        var errorResponse = JsonConvert.DeserializeObject<ApiErrorResponse>(webRequest.downloadHandler.text);
+                        var errorResponse = JsonConvert.DeserializeObject<DW_ApiErrorResponse>(webRequest.downloadHandler.text);
                         if (errorResponse?.error != null)
                         {
                             // Check for specific image size validation errors
-                            if (errorResponse.error.code == ErrorCodes.INVALID_SIZE_FORMAT ||
-                                errorResponse.error.code == ErrorCodes.INVALID_SIZE_VALUE ||
-                                errorResponse.error.code == ErrorCodes.SIZE_EXCEEDS_LIMIT ||
-                                errorResponse.error.code == ErrorCodes.SIZE_NOT_MULTIPLE ||
-                                errorResponse.error.code == ErrorCodes.SIZE_NOT_ALLOWED)
+                            if (errorResponse.error.code == DW_ErrorCodes.INVALID_SIZE_FORMAT ||
+                                errorResponse.error.code == DW_ErrorCodes.INVALID_SIZE_VALUE ||
+                                errorResponse.error.code == DW_ErrorCodes.SIZE_EXCEEDS_LIMIT ||
+                                errorResponse.error.code == DW_ErrorCodes.SIZE_NOT_MULTIPLE ||
+                                errorResponse.error.code == DW_ErrorCodes.SIZE_NOT_ALLOWED)
                             {
-                                throw new ImageSizeValidationException(
+                                throw new DW_ImageSizeValidationException(
                                     errorResponse.error.message,
                                     errorResponse.error.code,
                                     request.Size
                                 );
                             }
-                            
+
                             // Throw general API error
-                            throw new ApiErrorException(
+                            throw new DW_ApiErrorException(
                                 errorResponse.error.message,
                                 errorResponse.error.code,
                                 (int)webRequest.responseCode
@@ -160,18 +160,18 @@ namespace Developerworks_SDK.Provider.AI
                     {
                         // If error response parsing fails, continue to throw generic error below
                     }
-                    catch (ImageSizeValidationException)
+                    catch (DW_ImageSizeValidationException)
                     {
                         // Re-throw image size validation exceptions
                         throw;
                     }
-                    catch (ApiErrorException)
+                    catch (DW_ApiErrorException)
                     {
                         // Re-throw API error exceptions
                         throw;
                     }
-                    
-                    throw new DeveloperworksException(
+
+                    throw new DWException(
                         $"API request failed with status {webRequest.responseCode}: {webRequest.error}",
                         null,
                         (int)webRequest.responseCode

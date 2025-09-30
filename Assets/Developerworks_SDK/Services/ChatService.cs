@@ -17,17 +17,17 @@ namespace Developerworks_SDK.Services
         { 
             _chatProvider = chatProvider; 
         }
-        public async UniTask<Public.AIResult<string>> RequestAsync(string model, Public.ChatConfig config, CancellationToken cancellationToken = default)
+        public async UniTask<Public.DW_AIResult<string>> RequestAsync(string model, Public.DW_ChatConfig config, CancellationToken cancellationToken = default)
         {
             var internalMessages = config.Messages.Select(m => new ChatMessage { Role = m.Role, Content = m.Content }).ToList();
             var request = new ChatCompletionRequest { Model = model, Messages = internalMessages, Temperature = config.Temperature, Stream = false };
             var response = await _chatProvider.ChatCompletionAsync(request, cancellationToken);
-            if (response == null || response.Choices == null || response.Choices.Count == 0) return new Public.AIResult<string>("Failed to get a valid response from AI.");
-            return new Public.AIResult<string>(data: response.Choices[0].Message.Content);
+            if (response == null || response.Choices == null || response.Choices.Count == 0) return new Public.DW_AIResult<string>("Failed to get a valid response from AI.");
+            return new Public.DW_AIResult<string>(data: response.Choices[0].Message.Content);
         }
 
         // MODIFIED: Method signature changed to accept Action<string> for onConcluded.
-        public async UniTask RequestStreamAsync(string model, Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
+        public async UniTask RequestStreamAsync(string model, Public.DW_ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
         {
             var internalMessages = config.Messages.Select(m => new ChatMessage { Role = m.Role, Content = m.Content }).ToList();
             var request = new ChatCompletionRequest { Model = model, Messages = internalMessages, Temperature = config.Temperature, Stream = true };

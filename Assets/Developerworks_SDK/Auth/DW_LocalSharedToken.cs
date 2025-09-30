@@ -7,8 +7,10 @@ using System.Text;
 using UnityEngine;
 using Developerworks_SDK.Core;
 
-public static class DW_LocalSharedToken
+namespace Developerworks_SDK.Auth
 {
+    public static class DW_LocalSharedToken
+    {
     private const string TokenFileName = "shared_token.txt";
     private const string SharedFolderName = "DeveloperWorks_SDK";
 
@@ -170,4 +172,5 @@ public static class DW_LocalSharedToken
         }
     }
 #endif
+    }
 }

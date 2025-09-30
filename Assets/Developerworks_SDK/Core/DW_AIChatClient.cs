@@ -54,7 +54,7 @@ namespace Developerworks_SDK
         /// <summary>
         /// Generate text using chat completion
         /// </summary>
-        public async UniTask<Public.AIResult<string>> TextGenerationAsync(Public.ChatConfig config, CancellationToken cancellationToken = default)
+        public async UniTask<Public.DW_AIResult<string>> TextGenerationAsync(Public.DW_ChatConfig config, CancellationToken cancellationToken = default)
         {
             return await _chatService.RequestAsync(_model, config, cancellationToken);
         }
@@ -62,7 +62,7 @@ namespace Developerworks_SDK
         /// <summary>
         /// Generate text using streaming chat completion
         /// </summary>
-        public async UniTask TextChatStreamAsync(Public.ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
+        public async UniTask TextChatStreamAsync(Public.DW_ChatStreamConfig config, Action<string> onNewChunk, Action<string> onConcluded, CancellationToken cancellationToken = default)
         {
             await _chatService.RequestStreamAsync(_model, config, onNewChunk, onConcluded, cancellationToken);
         }
@@ -212,7 +212,7 @@ namespace Developerworks_SDK
         /// <returns>Generated object as JObject, or null if failed</returns>
         public async UniTask<JObject> GenerateStructuredAsync(
             string schemaName,
-            List<Public.ChatMessage> messages,
+            List<Public.DW_ChatMessage> messages,
             float? temperature = null,
             int? maxTokens = null,
             CancellationToken cancellationToken = default)
@@ -309,7 +309,7 @@ namespace Developerworks_SDK
         /// <returns>Generated object deserialized to type T, or default(T) if failed</returns>
         public async UniTask<T> GenerateStructuredAsync<T>(
             string schemaName,
-            List<Public.ChatMessage> messages,
+            List<Public.DW_ChatMessage> messages,
             float? temperature = null,
             int? maxTokens = null,
             CancellationToken cancellationToken = default)
@@ -449,7 +449,7 @@ namespace Developerworks_SDK
         /// </summary>
         /// <param name="messages">List of chat messages to print</param>
         /// <param name="title">Optional title for the chat log</param>
-        public static void PrintPrettyChatMessages(List<Public.ChatMessage> messages, string title = "Chat Messages")
+        public static void PrintPrettyChatMessages(List<Public.DW_ChatMessage> messages, string title = "Chat Messages")
         {
             if (messages == null || messages.Count == 0)
             {
@@ -486,9 +486,9 @@ namespace Developerworks_SDK
         /// </summary>
         /// <param name="messages">Array of chat messages to print</param>
         /// <param name="title">Optional title for the chat log</param>
-        public static void PrintPrettyChatMessages(Public.ChatMessage[] messages, string title = "Chat Messages")
+        public static void PrintPrettyChatMessages(Public.DW_ChatMessage[] messages, string title = "Chat Messages")
         {
-            PrintPrettyChatMessages(messages?.ToList() ?? new List<Public.ChatMessage>(), title);
+            PrintPrettyChatMessages(messages?.ToList() ?? new List<Public.DW_ChatMessage>(), title);
         }
 
         /// <summary>

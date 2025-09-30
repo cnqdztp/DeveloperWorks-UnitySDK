@@ -18,7 +18,7 @@ namespace Developerworks_SDK
         [SerializeField] private string chatModel;
         public string CharacterDesign=>characterDesign;
         private DW_AIChatClient _chatClient;
-        private List<ChatMessage> _conversationHistory;
+        private List<DW_ChatMessage> _conversationHistory;
         private string _currentPrompt;
         private bool _isTalking;
         public bool IsTalking { get { return _isTalking; } }
@@ -35,7 +35,7 @@ namespace Developerworks_SDK
         
         private void Start()
         {
-            _conversationHistory = new List<ChatMessage>();
+            _conversationHistory = new List<DW_ChatMessage>();
             Initialize().Forget();
         }
 
@@ -78,7 +78,7 @@ namespace Developerworks_SDK
             }
 
             // Add user message to history
-            _conversationHistory.Add(new ChatMessage
+            _conversationHistory.Add(new DW_ChatMessage
             {
                 Role = "user",
                 Content = message
@@ -87,13 +87,13 @@ namespace Developerworks_SDK
             try
             {
                 // Create chat config with full conversation history
-                var config = new ChatConfig(_conversationHistory.ToList());
+                var config = new DW_ChatConfig(_conversationHistory.ToList());
                 var result = await _chatClient.TextGenerationAsync(config, token);
 
                 if (result.Success && !string.IsNullOrEmpty(result.Response))
                 {
                     // Add assistant response to history
-                    _conversationHistory.Add(new ChatMessage
+                    _conversationHistory.Add(new DW_ChatMessage
                     {
                         Role = "assistant",
                         Content = result.Response
@@ -164,7 +164,7 @@ namespace Developerworks_SDK
                 if (result != null)
                 {
                     // Add user message to history
-                    _conversationHistory.Add(new ChatMessage
+                    _conversationHistory.Add(new DW_ChatMessage
                     {
                         Role = "user",
                         Content = message
@@ -172,9 +172,9 @@ namespace Developerworks_SDK
 
                     // Smart handling: Look for .talk field in structured response
                     string responseContent = ExtractTalkFromStructuredResponse(result, schemaName);
-                    
+
                     // Add assistant response to history
-                    _conversationHistory.Add(new ChatMessage
+                    _conversationHistory.Add(new DW_ChatMessage
                     {
                         Role = "assistant",
                         Content = responseContent
@@ -242,7 +242,7 @@ namespace Developerworks_SDK
                 var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, fullPrompt, _currentPrompt, cancellationToken: token);
 
                 // Add user message to history
-                _conversationHistory.Add(new ChatMessage
+                _conversationHistory.Add(new DW_ChatMessage
                 {
                     Role = "user",
                     Content = message
@@ -251,9 +251,9 @@ namespace Developerworks_SDK
                 // Smart handling: Look for .talk field in structured response
                 var jobject = Newtonsoft.Json.Linq.JObject.FromObject(result);
                 string responseContent = ExtractTalkFromStructuredResponse(jobject, schemaName);
-                
+
                 // Add assistant response to history
-                _conversationHistory.Add(new ChatMessage
+                _conversationHistory.Add(new DW_ChatMessage
                 {
                     Role = "assistant",
                     Content = responseContent
@@ -361,7 +361,7 @@ namespace Developerworks_SDK
             }
 
             // Add user message to history
-            _conversationHistory.Add(new ChatMessage
+            _conversationHistory.Add(new DW_ChatMessage
             {
                 Role = "user",
                 Content = message
@@ -369,7 +369,7 @@ namespace Developerworks_SDK
 
             try
             {
-                var config = new ChatStreamConfig(_conversationHistory.ToList());
+                var config = new DW_ChatStreamConfig(_conversationHistory.ToList());
                 
                 await _chatClient.TextChatStreamAsync(config,
                     chunk =>
@@ -383,7 +383,7 @@ namespace Developerworks_SDK
                         // Add the complete response to conversation history
                         if (!string.IsNullOrEmpty(completeResponse))
                         {
-                            _conversationHistory.Add(new ChatMessage
+                            _conversationHistory.Add(new DW_ChatMessage
                             {
                                 Role = "assistant",
                                 Content = completeResponse
@@ -426,7 +426,7 @@ namespace Developerworks_SDK
             // Add new system message if we have a prompt
             if (!string.IsNullOrEmpty(_currentPrompt))
             {
-                _conversationHistory.Insert(0, new ChatMessage
+                _conversationHistory.Insert(0, new DW_ChatMessage
                 {
                     Role = "system",
                     Content = _currentPrompt
@@ -529,9 +529,9 @@ namespace Developerworks_SDK
             // Re-add system message if we have a prompt
             if (!string.IsNullOrEmpty(_currentPrompt))
             {
-                _conversationHistory.Add(new ChatMessage
+                _conversationHistory.Add(new DW_ChatMessage
                 {
-                    Role = "system", 
+                    Role = "system",
                     Content = _currentPrompt
                 });
             }
@@ -540,7 +540,7 @@ namespace Developerworks_SDK
         /// <summary>
         /// Get the current conversation history
         /// </summary>
-        public ChatMessage[] GetHistory()
+        public DW_ChatMessage[] GetHistory()
         {
             return _conversationHistory.ToArray();
         }
@@ -566,7 +566,7 @@ namespace Developerworks_SDK
                 return;
             }
 
-            _conversationHistory.Add(new ChatMessage
+            _conversationHistory.Add(new DW_ChatMessage
             {
                 Role = role,
                 Content = content
@@ -645,7 +645,7 @@ namespace Developerworks_SDK
             }
 
             // Add user message to history first
-            _conversationHistory.Add(new ChatMessage
+            _conversationHistory.Add(new DW_ChatMessage
             {
                 Role = "user",
                 Content = message
@@ -660,9 +660,9 @@ namespace Developerworks_SDK
                 {
                     // Smart handling: Look for .talk field in structured response
                     string responseContent = ExtractTalkFromStructuredResponse(result, schemaName);
-                    
+
                     // Add assistant response to history
-                    _conversationHistory.Add(new ChatMessage
+                    _conversationHistory.Add(new DW_ChatMessage
                     {
                         Role = "assistant",
                         Content = responseContent
@@ -721,7 +721,7 @@ namespace Developerworks_SDK
             }
 
             // Add user message to history first
-            _conversationHistory.Add(new ChatMessage
+            _conversationHistory.Add(new DW_ChatMessage
             {
                 Role = "user",
                 Content = message
@@ -732,14 +732,14 @@ namespace Developerworks_SDK
                 // Use ChatClient's structured output with full message history and generic type
                 var result = await _chatClient.GenerateStructuredAsync<T>(schemaName, _conversationHistory, cancellationToken: token);
 
-                // Smart handling: Look for .talk field in structured response  
+                // Smart handling: Look for .talk field in structured response
                 var jobject = Newtonsoft.Json.Linq.JObject.FromObject(result);
                 string responseContent = ExtractTalkFromStructuredResponse(jobject, schemaName);
-                
+
                 // Add assistant response to history
-                _conversationHistory.Add(new ChatMessage
+                _conversationHistory.Add(new DW_ChatMessage
                 {
-                    Role = "assistant", 
+                    Role = "assistant",
                     Content = responseContent
                 });
 
@@ -763,6 +763,6 @@ namespace Developerworks_SDK
     public class ConversationSaveData
     {
         public string Prompt;
-        public ChatMessage[] History;
+        public DW_ChatMessage[] History;
     }
 }

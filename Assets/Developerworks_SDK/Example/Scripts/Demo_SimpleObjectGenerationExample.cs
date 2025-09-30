@@ -259,25 +259,25 @@ namespace Developerworks_SDK.Example
                 return;
             }
 
-            // Create a conversation with messages using Public.ChatMessage
-            var messages = new List<Developerworks_SDK.Public.ChatMessage>
+            // Create a conversation with messages using Public.DW_ChatMessage
+            var messages = new List<Developerworks_SDK.Public.DW_ChatMessage>
             {
-                new Developerworks_SDK.Public.ChatMessage
+                new Developerworks_SDK.Public.DW_ChatMessage
                 {
                     Role = "system",
                     Content = "You are a helpful shop assistant in a fantasy RPG game."
                 },
-                new Developerworks_SDK.Public.ChatMessage
+                new Developerworks_SDK.Public.DW_ChatMessage
                 {
                     Role = "user", 
                     Content = "What potions do you have for sale?"
                 },
-                new Developerworks_SDK.Public.ChatMessage
+                new Developerworks_SDK.Public.DW_ChatMessage
                 {
                     Role = "assistant",
                     Content = "We have healing potions, mana potions, and strength potions available."
                 },
-                new Developerworks_SDK.Public.ChatMessage
+                new Developerworks_SDK.Public.DW_ChatMessage
                 {
                     Role = "user",
                     Content = "Give me details about your healing potions in a structured format."

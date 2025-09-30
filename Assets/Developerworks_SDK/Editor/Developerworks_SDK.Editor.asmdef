@@ -1,0 +1,18 @@
+{
+    "name": "Developerworks_SDK.Editor",
+    "rootNamespace": "Developerworks_SDK.Editor",
+    "references": [
+        "Developerworks_SDK"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

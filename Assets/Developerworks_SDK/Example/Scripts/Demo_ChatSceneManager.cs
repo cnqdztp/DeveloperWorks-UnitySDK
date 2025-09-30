@@ -159,7 +159,7 @@ namespace Developerworks_SDK.Example
 
         }
 
-        List<ChatMessage> _selfManagedHistory = new List<ChatMessage>();
+        List<DW_ChatMessage> _selfManagedHistory = new List<DW_ChatMessage>();
         private bool chatClientSetSystem = false;
         async UniTask StandardChat(string _input)
         {
@@ -172,20 +172,20 @@ namespace Developerworks_SDK.Example
          
             if(!chatClientSetSystem)
             {
-                _selfManagedHistory.Add(new ChatMessage()
+                _selfManagedHistory.Add(new DW_ChatMessage()
                 {
                     Role = "system",
                     Content = "你扮演《底特律变人》的康纳"
                 });
                 chatClientSetSystem = true;
             }
-            _selfManagedHistory.Add(new ChatMessage()
+            _selfManagedHistory.Add(new DW_ChatMessage()
             {
                 Role = "user",
                 Content = _input
             });
-            var result = await _aiChatClient.TextGenerationAsync(new ChatConfig(_selfManagedHistory)); //对话
-            _selfManagedHistory.Add(new ChatMessage()
+            var result = await _aiChatClient.TextGenerationAsync(new DW_ChatConfig(_selfManagedHistory)); //对话
+            _selfManagedHistory.Add(new DW_ChatMessage()
             {
                 Role = "assistant",
                 Content = result.Response
@@ -215,19 +215,19 @@ namespace Developerworks_SDK.Example
         {
             if(!chatClientSetSystem)
             {
-                _selfManagedHistory.Add(new ChatMessage()
+                _selfManagedHistory.Add(new DW_ChatMessage()
                 {
                     Role = "system",
                     Content = "你扮演《底特律变人》的康纳"
                 });
                 chatClientSetSystem = true;
             }
-            _selfManagedHistory.Add(new ChatMessage()
+            _selfManagedHistory.Add(new DW_ChatMessage()
             {
                 Role = "user",
                 Content = _input
             });
-            await _aiChatClient.TextChatStreamAsync(new ChatStreamConfig(_selfManagedHistory),
+            await _aiChatClient.TextChatStreamAsync(new DW_ChatStreamConfig(_selfManagedHistory),
                 (s) =>
                 {
                     var original = _text.text;
@@ -236,7 +236,7 @@ namespace Developerworks_SDK.Example
                 (s) =>
                 {
                     _text.text = s; 
-                    _selfManagedHistory.Add(new ChatMessage()
+                    _selfManagedHistory.Add(new DW_ChatMessage()
                     {
                         Role = "assistant",
                         Content = s

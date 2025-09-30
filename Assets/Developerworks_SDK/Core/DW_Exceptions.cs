@@ -5,19 +5,19 @@ namespace Developerworks_SDK
     /// <summary>
     /// Base exception class for all Developerworks SDK exceptions
     /// </summary>
-    public class DeveloperworksException : Exception
+    public class DWException : Exception
     {
         public string ErrorCode { get; }
         public int? HttpStatusCode { get; }
 
-        public DeveloperworksException(string message, string errorCode = null, int? httpStatusCode = null) 
+        public DWException(string message, string errorCode = null, int? httpStatusCode = null)
             : base(message)
         {
             ErrorCode = errorCode;
             HttpStatusCode = httpStatusCode;
         }
 
-        public DeveloperworksException(string message, Exception innerException, string errorCode = null, int? httpStatusCode = null) 
+        public DWException(string message, Exception innerException, string errorCode = null, int? httpStatusCode = null)
             : base(message, innerException)
         {
             ErrorCode = errorCode;
@@ -28,12 +28,12 @@ namespace Developerworks_SDK
     /// <summary>
     /// Exception thrown when image size validation fails
     /// </summary>
-    public class ImageSizeValidationException : DeveloperworksException
+    public class DW_ImageSizeValidationException : DWException
     {
         public string ProvidedSize { get; }
         public string ValidationMode { get; }
 
-        public ImageSizeValidationException(string message, string errorCode, string providedSize = null, string validationMode = null) 
+        public DW_ImageSizeValidationException(string message, string errorCode, string providedSize = null, string validationMode = null)
             : base(message, errorCode, 400)
         {
             ProvidedSize = providedSize;
@@ -43,9 +43,9 @@ namespace Developerworks_SDK
     /// <summary>
     /// Exception thrown when the API returns an error response
     /// </summary>
-    public class ApiErrorException : DeveloperworksException
+    public class DW_ApiErrorException : DWException
     {
-        public ApiErrorException(string message, string errorCode, int httpStatusCode) 
+        public DW_ApiErrorException(string message, string errorCode, int httpStatusCode)
             : base(message, errorCode, httpStatusCode)
         {
         }
@@ -54,7 +54,7 @@ namespace Developerworks_SDK
     /// <summary>
     /// Error codes from the API
     /// </summary>
-    public static class ErrorCodes
+    public static class DW_ErrorCodes
     {
         // Authentication errors
         public const string INVALID_TOKEN = "INVALID_TOKEN";
@@ -109,13 +109,13 @@ namespace Developerworks_SDK
     /// API error response structure
     /// </summary>
     [Serializable]
-    public class ApiErrorResponse
+    public class DW_ApiErrorResponse
     {
-        public ApiError error { get; set; }
+        public DW_ApiError error { get; set; }
     }
 
     [Serializable]
-    public class ApiError
+    public class DW_ApiError
     {
         public string code { get; set; }
         public string message { get; set; }
