@@ -17,7 +17,7 @@ namespace Developerworks_SDK.Auth
 
         [SerializeField]private DW_PlayerClient _playerClient;
         public DW_PlayerClient PlayerClient { get => _playerClient; }
-        [SerializeField] private LoadingSpinner standaloneLoadingObject;
+        private LoadingSpinner standaloneLoadingObject;
 
         public void Setup(string publishableKey, string developerToken = null)
         {
