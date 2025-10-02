@@ -3901,7 +3901,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5040936065614824420, guid: 2327008528738c44bb75bc962832cfef, type: 3}
       propertyPath: gameId
-      value: ef6eaf4b-39ae-4c76-bcf6-b07541cf0ccc
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5040936065614824420, guid: 2327008528738c44bb75bc962832cfef, type: 3}
       propertyPath: defaultChatModel
