@@ -3899,18 +3899,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5040936065614824420, guid: 2327008528738c44bb75bc962832cfef, type: 3}
-      propertyPath: gameId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 5040936065614824420, guid: 2327008528738c44bb75bc962832cfef, type: 3}
-      propertyPath: defaultChatModel
-      value: gpt-4.1-mini
-      objectReference: {fileID: 0}
-    - target: {fileID: 5040936065614824420, guid: 2327008528738c44bb75bc962832cfef, type: 3}
-      propertyPath: defaultImageModel
-      value: flux-1-schnell
-      objectReference: {fileID: 0}
     - target: {fileID: 8732178962955772078, guid: 2327008528738c44bb75bc962832cfef, type: 3}
       propertyPath: m_Name
       value: DW_SDK

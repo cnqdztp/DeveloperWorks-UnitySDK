@@ -43,6 +43,8 @@ namespace Developerworks_SDK.Auth
             if (IsDeveloperToken)
             {
                 Debug.Log("[Developerworks SDK] Using developer token. Authentication successful.");
+                standaloneLoadingObject.gameObject.SetActive(false);
+
                 return true;
             }
             // Step 1: Try loading Shared Token if Player Token not found
@@ -52,6 +54,8 @@ namespace Developerworks_SDK.Auth
             if (await IsTokenValidWithAPICheck())
             {
                 Debug.Log("[Developerworks SDK] Valid shared token found, loaded and verified.");
+                standaloneLoadingObject.gameObject.SetActive(false);
+
                 // Also save it as Player Token for consistency
                 // SavePlayerTokenFromShared();
                 return true;
@@ -62,6 +66,8 @@ namespace Developerworks_SDK.Auth
 
             if (await IsTokenValidWithAPICheck())
             {
+                standaloneLoadingObject.gameObject.SetActive(false);
+
                 Debug.Log("[Developerworks SDK] Existing valid player token found and verified.");
                 return true;
             }
