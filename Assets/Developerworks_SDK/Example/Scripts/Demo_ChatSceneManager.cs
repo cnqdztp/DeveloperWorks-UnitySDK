@@ -153,7 +153,7 @@ namespace Developerworks_SDK.Example
                 Debug.LogError("initialization failed, you should place a sdk object first, then fill in your gameId in the sdk object. 初始化失败，你需要放置一个sdk prefab，然后将你的游戏Id填写到sdk里");
                 return;
             }
-            _aiChatClient = DW_SDK.Factory.CreateChatClient("gpt-4o"); 
+            _aiChatClient = DW_SDK.Factory.CreateChatClient("PLACE_MODEL_NAME_HERE"); 
             npcSettingField.text = _npcClient.CharacterDesign;
 
 
