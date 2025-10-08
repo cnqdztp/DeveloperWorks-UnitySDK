@@ -6,9 +6,12 @@ namespace Developerworks_SDK
 {
     public class DW_SDK : MonoBehaviour
     {
+        public const string VERSION = "v0.1.7.0-beta";
+
         [SerializeField] private string gameId, defaultChatModel, defaultImageModel;
         [SerializeField] private Auth.DW_AuthManager authManager;
         [SerializeField] private bool ignoreDeveloperToken;
+        
         public static DW_SDK Instance { get; private set; }
 
         private void Awake()

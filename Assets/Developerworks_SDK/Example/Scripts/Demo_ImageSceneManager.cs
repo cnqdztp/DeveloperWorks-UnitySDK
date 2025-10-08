@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Developerworks_SDK.Example
@@ -36,6 +37,32 @@ namespace Developerworks_SDK.Example
 
         private void Awake()
         {
+            // Ensure EventSystem exists for UI interaction
+            if (EventSystem.current == null)
+            {
+                GameObject eventSystem = new GameObject("EventSystem");
+                eventSystem.AddComponent<EventSystem>();
+
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+                // New Input System only
+                var inputModule = eventSystem.AddComponent(System.Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem"));
+#elif ENABLE_LEGACY_INPUT_MANAGER && !ENABLE_INPUT_SYSTEM
+                // Legacy Input Manager only
+                eventSystem.AddComponent<StandaloneInputModule>();
+#else
+                // Both enabled - try new Input System first, fallback to legacy
+                var inputSystemType = System.Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+                if (inputSystemType != null)
+                {
+                    eventSystem.AddComponent(inputSystemType);
+                }
+                else
+                {
+                    eventSystem.AddComponent<StandaloneInputModule>();
+                }
+#endif
+            }
+
             sendBtn.onClick.AddListener(()=>OnButtonClicked());
         }
 

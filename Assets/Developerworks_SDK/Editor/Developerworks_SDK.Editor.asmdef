@@ -2,7 +2,8 @@
     "name": "Developerworks_SDK.Editor",
     "rootNamespace": "Developerworks_SDK.Editor",
     "references": [
-        "Developerworks_SDK"
+        "Developerworks_SDK",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor"
