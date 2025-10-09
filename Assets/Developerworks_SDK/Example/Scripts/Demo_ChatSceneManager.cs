@@ -24,6 +24,7 @@ namespace Developerworks_SDK.Example
         [SerializeField] private InputField npcSettingField;
         [SerializeField] private Image npcStatusIndicator;
         [SerializeField] private GameObject npcCanvas;
+        [SerializeField] private Button npcRecordBtn;
 
         private static readonly Color gapColor = new Color(0, 0, 0,0);
         private static readonly Color notTalkingColor = new Color(1, 1, 0,1);
@@ -62,10 +63,21 @@ namespace Developerworks_SDK.Example
             variantDropdown.onValueChanged.AddListener(OnVariantDropdownChanged);
             saveBtn.onClick.AddListener(OnNpcSave);
             loadBtn.onClick.AddListener(OnNpcLoad);
+            npcRecordBtn.onClick.AddListener(OnNpcRecord);
             npcSettingField.onEndEdit.AddListener(OnNpcSettingChanged);
             OnVariantDropdownChanged(variantDropdown.value);
             OnUseStreamClicked(useStreamToggle.isOn);
             userSendBtn.onClick.AddListener(OnUserSendClicked);
+        }
+
+        private void OnNpcRecord()
+        {
+            var recorder = _npcClient.GetComponent<DW_NPCClient_VoiceModule>().GetOrCreateRecorder();
+            recorder.StartRecording();
+            recorder.OnRecordingStopped += clip =>
+            {
+                _npcClient.GetComponent<DW_NPCClient_VoiceModule>().ListenOnly(clip);
+            };
         }
 
         private void OnUserSendClicked()
@@ -173,7 +185,7 @@ namespace Developerworks_SDK.Example
              * and if there is not, it will automatically start up the login modal.
              * If you pass in your developer key, the sdk skips player validation.
              */
-            var result = await DW_SDK.InitializeAsync();
+            var result = await DW_SDK.InitializeAsync("dev-b41a6b70-7abc-4ecf-b316-374f4b48caed");
 
             if (!result)
             {

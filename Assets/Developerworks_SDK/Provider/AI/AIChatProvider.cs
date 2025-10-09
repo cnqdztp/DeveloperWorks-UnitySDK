@@ -24,14 +24,14 @@ namespace Developerworks_SDK.Provider.AI
 
         private string GetChatUrl()
         {
-            if (_authManager == null || string.IsNullOrEmpty(_authManager.PublishableKey))
+            if (_authManager == null || string.IsNullOrEmpty(_authManager.gameId))
             {
                 throw new InvalidOperationException("PublishableKey (GameId) is not available from AuthManager.");
             }
             if(_useOversea){
-                return $"https://dwoversea.agentlandlab.com/ai/{_authManager.PublishableKey}/v1/chat";
+                return $"https://dwoversea.agentlandlab.com/ai/{_authManager.gameId}/v1/chat";
             }
-            return $"https://developerworks.agentlandlab.com/ai/{_authManager.PublishableKey}/v1/chat";
+            return $"https://developerworks.agentlandlab.com/ai/{_authManager.gameId}/v1/chat";
         }
 
         private string GetAuthToken()

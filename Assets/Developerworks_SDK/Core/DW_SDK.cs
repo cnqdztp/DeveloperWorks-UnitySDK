@@ -8,8 +8,15 @@ namespace Developerworks_SDK
     {
         public const string VERSION = "v0.1.7.0-beta";
 
-        [SerializeField] private string gameId, defaultChatModel, defaultImageModel;
+        [Tooltip("Your game ID from Developerworks platform 从Developerworks平台获取的游戏ID")]
+        [SerializeField] private string gameId;
+        [Tooltip("Default chat model to use (e.g., gpt-4o-mini) 默认使用的对话模型（例如：gpt-4o-mini）")]
+        [SerializeField] private string defaultChatModel;
+        [Tooltip("Default image generation model to use 默认使用的图像生成模型")]
+        [SerializeField] private string defaultImageModel;
+        [Tooltip("Reference to DW_AuthManager component DW_AuthManager组件引用")]
         [SerializeField] private Auth.DW_AuthManager authManager;
+        [Tooltip("Ignore developer token (use player tokens only) 忽略开发者令牌（仅使用玩家令牌）")]
         [SerializeField] private bool ignoreDeveloperToken;
         
         public static DW_SDK Instance { get; private set; }
@@ -32,6 +39,7 @@ namespace Developerworks_SDK
         private static Provider.IChatProvider _chatProvider;
         private static Provider.IImageProvider _imageProvider;
         private static Provider.AI.IObjectProvider _objectProvider;
+        private static Provider.ITranscriptionProvider _transcriptionProvider;
 
         /// <summary>
         /// Asynchronously initializes the SDK. This must complete successfully before creating clients.
@@ -79,6 +87,7 @@ namespace Developerworks_SDK
             _chatProvider = new Provider.AI.AIChatProvider(_dwAuthManager);
             _imageProvider = new Provider.AI.AIImageProvider(_dwAuthManager);
             _objectProvider = new Provider.AI.AIObjectProvider(_dwAuthManager);
+            _transcriptionProvider = new Provider.AI.AITranscriptionProvider(_dwAuthManager);
             _isInitialized = true;
             Debug.Log("[Developerworks SDK] Developerworks_SDK Initialized Successfully");
             return true;
@@ -157,6 +166,34 @@ namespace Developerworks_SDK
                 return new DW_AIImageClient(model, _imageProvider);
             }
 
+            /// <summary>
+            /// Creates an audio transcription client for speech-to-text conversion
+            /// </summary>
+            /// <param name="modelName">The transcription model to use (e.g., "whisper-1")</param>
+            /// <returns>An audio transcription client</returns>
+            public static DW_AudioTranscriptionClient CreateTranscriptionClient(string modelName)
+            {
+                if (!Instance)
+                {
+                    Debug.LogError("Please place DW_SDK object in your FIRST scene.");
+                    return null;
+                }
+                if (!_isInitialized)
+                {
+                    Debug.LogError("SDK not initialized. Please call DW_SDK.InitializeAsync() and wait for it to complete first.");
+                    return null;
+                }
+
+                if (string.IsNullOrEmpty(modelName))
+                {
+                    Debug.LogError("Transcription model name cannot be empty. Please specify a model like 'whisper-1'.");
+                    return null;
+                }
+
+                var transcriptionService = new Services.TranscriptionService(_transcriptionProvider);
+                return new DW_AudioTranscriptionClient(modelName, transcriptionService);
+            }
+
         }
 
         public static class Populate
@@ -189,6 +226,16 @@ namespace Developerworks_SDK
 
                 recipient.Setup(chatClient);
             }
+        }
+
+        /// <summary>
+        /// Quick access to create a transcription client
+        /// </summary>
+        /// <param name="modelName">The transcription model to use (e.g., "whisper-1")</param>
+        /// <returns>An audio transcription client</returns>
+        public static DW_AudioTranscriptionClient CreateTranscriptionClient(string modelName)
+        {
+            return Factory.CreateTranscriptionClient(modelName);
         }
     }
 }

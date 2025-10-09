@@ -10,8 +10,8 @@ namespace Developerworks_SDK.Auth
         // CHANGED: Keys are now more specific to "PlayerToken"
         private const string PlayerTokenKey = "DW_SDK_PlayerToken";
         private const string TokenExpiryKey = "DW_SDK_TokenExpiry";
-        private string _publishableKey;
-        public string PublishableKey { get=>_publishableKey; }
+        private string _gameId;
+        public string gameId { get=>_gameId; }
         public string AuthToken { get; private set; }
         public bool IsDeveloperToken { get; private set; }
 
@@ -21,8 +21,8 @@ namespace Developerworks_SDK.Auth
 
         public void Setup(string publishableKey, string developerToken = null)
         {
-            _publishableKey = publishableKey;
-            Debug.Log("[Developerworks SDK] Initializing authentication with the following game id: "+_publishableKey);
+            _gameId = publishableKey;
+            Debug.Log("[Developerworks SDK] Initializing authentication with the following game id: "+_gameId);
             if (!string.IsNullOrEmpty(developerToken))
             {
                 AuthToken = developerToken;

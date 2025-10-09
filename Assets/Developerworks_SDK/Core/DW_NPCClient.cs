@@ -14,7 +14,10 @@ namespace Developerworks_SDK
     /// </summary>
     public class DW_NPCClient : MonoBehaviour
     {
+        [Tooltip("Character design/system prompt for this NPC 该NPC的角色设定/系统提示词")]
+        
         [SerializeField] private string characterDesign;
+        [Tooltip("Chat model name to use (leave empty to use SDK default) 使用的对话模型名称（留空则使用SDK默认值）")]
         [SerializeField] private string chatModel;
         public string CharacterDesign=>characterDesign;
         private DW_AIChatClient _chatClient;

@@ -108,27 +108,24 @@ namespace Developerworks_SDK.Editor
                     if (comparison < 0)
                     {
                         // New version available
-                        string message = $"A new version of Developerworks SDK is available!\n\n" +
-                                       $"Current Version: {currentVersion}\n" +
-                                       $"Latest Version: {latestVersion}\n";
+                        string message = $"A new version of Developerworks Unity SDK is available!\n" +
+                                       $"{currentVersion} -> {latestVersion}\n";
 
                         if (!string.IsNullOrEmpty(response.name))
                         {
                             message += $"Release Name: {response.name}\n";
                         }
 
-                        if (!string.IsNullOrEmpty(response.publishedAt))
-                        {
-                            message += $"Published: {response.publishedAt}\n";
-                        }
+                        // if (!string.IsNullOrEmpty(response.publishedAt))
+                        // {
+                        //     message += $"Published: {response.publishedAt}\n";
+                        // }
 
                         if (!string.IsNullOrEmpty(response.body))
                         {
                             message += $"\n{response.body}\n";
                         }
-
-                        message += $"\nWould you like to visit Developerworks to download the latest version?";
-
+                        
                         int option = EditorUtility.DisplayDialogComplex(
                             "SDK Update Available",
                             message,

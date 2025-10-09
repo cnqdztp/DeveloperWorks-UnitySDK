@@ -10,5 +10,38 @@ namespace Developerworks_SDK.Public
     public class DW_ChatConfig : DW_ChatConfigBase { public DW_ChatConfig(string userMessage) : base(userMessage) { } public DW_ChatConfig(List<DW_ChatMessage> messages) : base(messages) { } }
     public class DW_ChatStreamConfig : DW_ChatConfigBase { public DW_ChatStreamConfig(string userMessage) : base(userMessage) { } public DW_ChatStreamConfig(List<DW_ChatMessage> messages) : base(messages) { } }
 
-    
+    // Audio Transcription
+    [System.Serializable]
+    public class DW_TranscriptionResult
+    {
+        public bool Success { get; }
+        public string Text { get; }
+        public string Language { get; }
+        public float? DurationInSeconds { get; }
+        public DW_TranscriptionSegment[] Segments { get; }
+        public string Error { get; }
+
+        public DW_TranscriptionResult(string text, string language = null, float? durationInSeconds = null, DW_TranscriptionSegment[] segments = null)
+        {
+            Success = true;
+            Text = text;
+            Language = language;
+            DurationInSeconds = durationInSeconds;
+            Segments = segments;
+        }
+
+        public DW_TranscriptionResult(string errorMessage)
+        {
+            Success = false;
+            Error = errorMessage;
+        }
+    }
+
+    [System.Serializable]
+    public class DW_TranscriptionSegment
+    {
+        public float Start;
+        public float End;
+        public string Text;
+    }
 }
