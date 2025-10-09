@@ -25,6 +25,7 @@ namespace Developerworks_SDK.Example
         [SerializeField] private Image npcStatusIndicator;
         [SerializeField] private GameObject npcCanvas;
         [SerializeField] private Button npcRecordBtn;
+        [SerializeField] private Button stopNpcRecordBtn;
 
         private static readonly Color gapColor = new Color(0, 0, 0,0);
         private static readonly Color notTalkingColor = new Color(1, 1, 0,1);
@@ -64,20 +65,37 @@ namespace Developerworks_SDK.Example
             saveBtn.onClick.AddListener(OnNpcSave);
             loadBtn.onClick.AddListener(OnNpcLoad);
             npcRecordBtn.onClick.AddListener(OnNpcRecord);
+            stopNpcRecordBtn.onClick.AddListener(OnStopNpcRecord);
             npcSettingField.onEndEdit.AddListener(OnNpcSettingChanged);
             OnVariantDropdownChanged(variantDropdown.value);
             OnUseStreamClicked(useStreamToggle.isOn);
             userSendBtn.onClick.AddListener(OnUserSendClicked);
+            var recorder = _npcClient.GetComponent<DW_NPCClient_VoiceModule>().GetOrCreateRecorder();
+            recorder.OnRecordingStarted += () =>
+            {
+                stopNpcRecordBtn.gameObject.SetActive(true);
+                npcRecordBtn.gameObject.SetActive(false);
+            };
+            recorder.OnRecordingStopped += clip =>
+            {
+                _npcClient.GetComponent<DW_NPCClient_VoiceModule>().ListenOnly(clip);
+                stopNpcRecordBtn.gameObject.SetActive(false);
+                npcRecordBtn.gameObject.SetActive(true);
+            };
+        }
+
+        private void OnStopNpcRecord()
+        {
+            var recorder = _npcClient.GetComponent<DW_NPCClient_VoiceModule>().GetOrCreateRecorder();
+            recorder.StopRecording();
+            
         }
 
         private void OnNpcRecord()
         {
             var recorder = _npcClient.GetComponent<DW_NPCClient_VoiceModule>().GetOrCreateRecorder();
             recorder.StartRecording();
-            recorder.OnRecordingStopped += clip =>
-            {
-                _npcClient.GetComponent<DW_NPCClient_VoiceModule>().ListenOnly(clip);
-            };
+            
         }
 
         private void OnUserSendClicked()
