@@ -68,7 +68,7 @@ namespace Developerworks_SDK.Editor
                     if (isManual)
                     {
                         EditorUtility.DisplayDialog(
-                            "Update Check Failed",
+                            "Update Check Failed 无法检查更新",
                             $"Failed to check for updates:\n{webRequest.error}",
                             "OK"
                         );
@@ -85,7 +85,7 @@ namespace Developerworks_SDK.Editor
                         if (isManual)
                         {
                             EditorUtility.DisplayDialog(
-                                "Update Check Failed",
+                                "Update Check Failed 检查更新失败",
                                 "Invalid response from version server.",
                                 "OK"
                             );
@@ -127,9 +127,9 @@ namespace Developerworks_SDK.Editor
                         }
                         
                         int option = EditorUtility.DisplayDialogComplex(
-                            "SDK Update Available",
+                            "SDK Update Available 新版本的SDK可供下载",
                             message,
-                            "Download Now",
+                            "Download Now 立刻下载",
                             "Skip This Version",
                             "Remind Me Later"
                         );

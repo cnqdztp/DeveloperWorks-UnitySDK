@@ -203,14 +203,14 @@ namespace Developerworks_SDK.Example
              * and if there is not, it will automatically start up the login modal.
              * If you pass in your developer key, the sdk skips player validation.
              */
-            var result = await DW_SDK.InitializeAsync("dev-b41a6b70-7abc-4ecf-b316-374f4b48caed");
+            var result = await DW_SDK.InitializeAsync();
 
             if (!result)
             {
                 Debug.LogError("initialization failed, you should place a sdk object first, then fill in your gameId in the sdk object. 初始化失败，你需要放置一个sdk prefab，然后将你的游戏Id填写到sdk里");
                 return;
             }
-            _aiChatClient = DW_SDK.Factory.CreateChatClient("PLACE_MODEL_NAME_HERE"); 
+            _aiChatClient = DW_SDK.Factory.CreateChatClient(); 
             npcSettingField.text = _npcClient.CharacterDesign;
 
 
